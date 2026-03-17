@@ -1,0 +1,140 @@
+"""
+FastAPI Application Entry Point
+Main file khởi tạo và cấu hình ứng dụng
+"""
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
+
+from app.core.config import settings
+from app.models.base import HealthCheckResponse
+from app.utils.file_utils import ensure_directory_exists
+
+# Import routers
+from app.routers import upload, example
+
+
+# Tạo FastAPI app instance
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    description=settings.app_description,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
+
+
+# ==================== Middleware Configuration ====================
+
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_credentials=True,
+    allow_methods=settings.allowed_methods,
+    allow_headers=settings.allowed_headers,
+)
+
+
+# ==================== Static Files ====================
+
+# Đảm bảo upload directory tồn tại
+ensure_directory_exists(settings.upload_dir)
+
+# Mount static files (uploads)
+app.mount("/uploads", StaticFiles(directory=str(settings.upload_dir)), name="uploads")
+
+
+# ==================== API Routers ====================
+
+# Include routers với prefix /api
+app.include_router(upload.router, prefix=settings.api_prefix)
+app.include_router(example.router, prefix=settings.api_prefix)
+
+# TODO: Thêm các router khác ở đây
+# app.include_router(users.router, prefix=settings.api_prefix)
+# app.include_router(auth.router, prefix=settings.api_prefix)
+# app.include_router(products.router, prefix=settings.api_prefix)
+
+
+# ==================== Root Endpoints ====================
+
+@app.get(
+    "/",
+    tags=["Root"],
+    summary="Root endpoint",
+    description="Endpoint gốc, hiển thị thông tin API"
+)
+async def root():
+    """Root endpoint - thông tin cơ bản về API"""
+    return {
+        "app_name": settings.app_name,
+        "version": settings.app_version,
+        "description": settings.app_description,
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "api_prefix": settings.api_prefix,
+        "available_endpoints": {
+            "health": "/health",
+            "upload": f"{settings.api_prefix}/upload",
+            "example": f"{settings.api_prefix}/example"
+        }
+    }
+
+
+@app.get(
+    "/health",
+    response_model=HealthCheckResponse,
+    tags=["Health"],
+    summary="Health check",
+    description="Kiểm tra trạng thái hoạt động của API"
+)
+async def health_check():
+    """Health check endpoint"""
+    return HealthCheckResponse(
+        status="healthy",
+        timestamp=datetime.now(),
+        version=settings.app_version
+    )
+
+
+# ==================== Startup/Shutdown Events ====================
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Chạy khi application khởi động
+    Có thể thêm logic như:
+    - Kết nối database
+    - Khởi tạo cache
+    - Load models
+    - etc.
+    """
+    print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
+    print(f"📝 Docs: http://{settings.host}:{settings.port}/docs")
+    print(f"🔧 API Prefix: {settings.api_prefix}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Chạy khi application tắt
+    Có thể thêm cleanup logic
+    """
+    print(f"👋 Shutting down {settings.app_name}")
+
+
+# ==================== Run Application ====================
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(
+        "app.main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
+        log_level="info"
+    )
