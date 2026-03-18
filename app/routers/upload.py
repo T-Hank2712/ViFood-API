@@ -3,7 +3,6 @@ Upload Router
 API endpoints cho upload functionality
 """
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
-from fastapi.responses import JSONResponse
 
 from app.models.base import SuccessResponse
 from app.models.upload import UploadedFileInfo, DeleteFileResponse, UploadConfig
@@ -45,10 +44,10 @@ async def upload_image(
 ):
     """
     Upload hình ảnh
-    
+
     - **file**: File hình ảnh (jpg, jpeg, png, gif, webp, bmp)
     - **max_size**: 10MB
-    
+
     Returns:
         - url: Đường dẫn truy cập ảnh
         - filename: Tên file đã lưu (unique)
@@ -62,13 +61,13 @@ async def upload_image(
     """
     try:
         file_info = await upload_service.upload_image(file)
-        
+
         return SuccessResponse(
             success=True,
             message="Upload thành công",
             data=file_info
         )
-        
+
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -90,18 +89,18 @@ async def delete_image(
 ):
     """
     Xóa hình ảnh đã upload
-    
+
     - **filename**: Tên file cần xóa (lấy từ response của upload)
     """
     try:
         delete_info = await upload_service.delete_file(filename)
-        
+
         return SuccessResponse(
             success=True,
             message="Xóa file thành công",
             data=delete_info
         )
-        
+
     except HTTPException as he:
         raise he
     except Exception as e:

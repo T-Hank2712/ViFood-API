@@ -77,3 +77,37 @@ app/
 - `POST /api/upload/image` - Upload image
 - `DELETE /api/upload/image/{filename}` - Delete image
 - `GET /api/example/` - Example endpoint
+
+## Versioning + Alias + Canary (Products)
+
+- `GET /api/v0/products/{id}`: endpoint cố định v0
+- `GET /api/v1/products/{id}`: endpoint cố định v1
+- `GET /api/products/{id}`: endpoint alias (switch theo config)
+
+Thêm vào `.env`:
+
+```env
+PRODUCTS_DEFAULT_VERSION=v0
+PRODUCTS_CANARY_ENABLED=false
+PRODUCTS_CANARY_PERCENT=0
+PRODUCTS_CANARY_TARGET_VERSION=v1
+```
+
+Rollout canary ví dụ (10% traffic sang v1):
+
+```env
+PRODUCTS_DEFAULT_VERSION=v0
+PRODUCTS_CANARY_ENABLED=true
+PRODUCTS_CANARY_PERCENT=10
+PRODUCTS_CANARY_TARGET_VERSION=v1
+```
+
+Alias endpoint trả header `X-Products-Version` để biết request đang vào version nào.
+
+## Contract test
+
+```powershell
+python -m pytest -q
+```
+
+Test contract nằm tại `tests/test_products_contract.py`.

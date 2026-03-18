@@ -13,6 +13,9 @@ from app.utils.file_utils import ensure_directory_exists
 
 # Import routers
 from app.routers import upload, example
+from app.routers.products_alias import router as products_alias_router
+from app.routers.v0.products import router as products_v0_router
+from app.routers.v1.products import router as products_v1_router
 
 
 # Tạo FastAPI app instance
@@ -53,6 +56,14 @@ app.mount("/uploads", StaticFiles(directory=str(settings.upload_dir)), name="upl
 app.include_router(upload.router, prefix=settings.api_prefix)
 app.include_router(example.router, prefix=settings.api_prefix)
 
+# Products versioning strategy:
+# - /api/v0/products/{id}: luôn trỏ về v0
+# - /api/v1/products/{id}: luôn trỏ về v1
+# - /api/products/{id}: alias theo settings.products_default_version (+ canary)
+app.include_router(products_v0_router, prefix=f"{settings.api_prefix}/v0")
+app.include_router(products_v1_router, prefix=f"{settings.api_prefix}/v1")
+app.include_router(products_alias_router, prefix=settings.api_prefix)
+
 # TODO: Thêm các router khác ở đây
 # app.include_router(users.router, prefix=settings.api_prefix)
 # app.include_router(auth.router, prefix=settings.api_prefix)
@@ -76,10 +87,17 @@ async def root():
         "docs": "/docs",
         "redoc": "/redoc",
         "api_prefix": settings.api_prefix,
+        "products_default_version": settings.products_default_version,
+        "products_canary_enabled": settings.products_canary_enabled,
+        "products_canary_percent": settings.products_canary_percent,
+        "products_canary_target_version": settings.products_canary_target_version,
         "available_endpoints": {
             "health": "/health",
             "upload": f"{settings.api_prefix}/upload",
-            "example": f"{settings.api_prefix}/example"
+            "example": f"{settings.api_prefix}/example",
+            "products_default": f"{settings.api_prefix}/products/{{id}}",
+            "products_v0": f"{settings.api_prefix}/v0/products/{{id}}",
+            "products_v1": f"{settings.api_prefix}/v1/products/{{id}}"
         }
     }
 
