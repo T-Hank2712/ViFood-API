@@ -16,6 +16,7 @@ from app.routers import upload, example
 from app.routers.products_alias import router as products_alias_router
 from app.routers.v0.products import router as products_v0_router
 from app.routers.v1.products import router as products_v1_router
+from app.routers.v0.disease import router as disease_v0_router
 
 
 # Tạo FastAPI app instance
@@ -68,6 +69,8 @@ app.include_router(products_alias_router, prefix=settings.api_prefix)
 # app.include_router(users.router, prefix=settings.api_prefix)
 # app.include_router(auth.router, prefix=settings.api_prefix)
 # app.include_router(products.router, prefix=settings.api_prefix)
+
+app.include_router(disease_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 
 # ==================== Root Endpoints ====================
