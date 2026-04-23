@@ -11,3 +11,7 @@ class DiseaseServiceV0:
     @staticmethod
     def get_all():
         return diseases
+
+    @staticmethod
+    def get_by_id(disease_id: int):
+        return next((d for d in diseases if d.id == disease_id), None)
