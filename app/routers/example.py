@@ -2,7 +2,7 @@
 Example Router
 Template cho các router khác trong tương lai
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.models.base import SuccessResponse
 
 

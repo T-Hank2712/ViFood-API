@@ -3,8 +3,9 @@ Application Configuration
 Quản lý tất cả cấu hình của ứng dụng
 """
 from pydantic_settings import BaseSettings
+from pydantic import Field
 from pathlib import Path
-from typing import Set, Optional
+from typing import Set, Optional, Literal
 from functools import lru_cache
 
 
@@ -37,6 +38,10 @@ class Settings(BaseSettings):
     # ==================== URL Settings ====================
     base_url: str = "http://localhost:8000"
     api_prefix: str = "/api"
+    products_default_version: Literal["v0", "v1"] = "v0"
+    products_canary_enabled: bool = False
+    products_canary_percent: int = Field(default=0, ge=0, le=100)
+    products_canary_target_version: Literal["v0", "v1"] = "v1"
     
     # ==================== Database Settings (for future) ====================
     database_url: Optional[str] = None

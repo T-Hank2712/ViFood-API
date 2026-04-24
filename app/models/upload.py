@@ -2,9 +2,8 @@
 Upload Models/Schemas
 Pydantic models cho upload functionality
 """
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
 
 
 class UploadedFileInfo(BaseModel):
@@ -18,7 +17,7 @@ class UploadedFileInfo(BaseModel):
     size_bytes: int = Field(..., description="Kích thước file (bytes)")
     content_type: str = Field(..., description="MIME type của file")
     extension: str = Field(..., description="Phần mở rộng file")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -39,7 +38,7 @@ class DeleteFileResponse(BaseModel):
     """Schema cho response khi xóa file"""
     filename: str = Field(..., description="Tên file đã xóa")
     deleted_at: datetime = Field(default_factory=datetime.now, description="Thời điểm xóa")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -54,7 +53,7 @@ class UploadConfig(BaseModel):
     max_file_size_mb: float = Field(..., description="Kích thước file tối đa (MB)")
     allowed_extensions: list[str] = Field(..., description="Các định dạng file được phép")
     upload_endpoint: str = Field(..., description="Endpoint để upload")
-    
+
     class Config:
         json_schema_extra = {
             "example": {

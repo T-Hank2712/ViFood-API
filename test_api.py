@@ -23,7 +23,7 @@ def print_response(response):
     print(f"Status Code: {response.status_code}")
     try:
         print(f"Response:\n{json.dumps(response.json(), indent=2, ensure_ascii=False)}")
-    except:
+    except Exception:
         print(f"Response: {response.text}")
 
 
