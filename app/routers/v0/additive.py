@@ -1,0 +1,149 @@
+from fastapi import APIRouter, HTTPException, status
+from app.services.v0.additive_service import AdditiveServiceV0
+
+router = APIRouter(
+    prefix="/additives",
+    tags=["Additives V0"]
+)
+
+
+@router.get("/")
+def list_additives():
+    """
+    Lấy danh sách tất cả phụ gia (additive).
+
+    Version v0 trả về dữ liệu mẫu mặc định (mock data),
+    không truy vấn cơ sở dữ liệu.
+    Được sử dụng cho mục đích testing và demo.
+
+    **Returns:**
+    - List[Additive]: Danh sách các phụ gia
+      - id (int): Mã định danh phụ gia
+      - name (str): Tên phụ gia
+      - description (str | None): Mô tả phụ gia
+
+    **Lưu ý:**
+    - Trong v0, dữ liệu luôn cố định (mock data)
+    - Không phụ thuộc database
+    - Không phản ánh dữ liệu thực tế
+    """
+    return AdditiveServiceV0.get_all_additives()
+
+
+@router.get("/{id}")
+def get_additive_by_id(id: int):
+    """
+    Lấy thông tin chi tiết của một phụ gia theo ID.
+
+    Version v0 trả về dữ liệu mẫu mặc định.
+
+    **Args:**
+    - `id` (int): ID của phụ gia cần lấy thông tin (số nguyên dương)
+
+    **Returns:**
+    - additive: Thông tin chi tiết phụ gia
+      - id (int): Mã phụ gia
+      - name (str): Tên phụ gia
+      - description (str | None): Mô tả phụ gia
+
+    **Raises:**
+    - HTTPException 404: Nếu không tìm thấy phụ gia
+
+    **Lưu ý:**
+    - v0 không truy vấn database thật
+    """
+    additive = AdditiveServiceV0.get_additive_by_id(id)
+    if not additive:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Additive with ID {id} not found"
+        )
+    return additive
+
+
+@router.post("/")
+def create_additive(name: str, description: str | None = None):
+    """
+    Tạo mới một phụ gia.
+
+    Version v0 tạo phụ gia trong bộ nhớ tạm thời, không lưu vào database thật.
+
+    **Args:**
+    - `name` (str): Tên phụ gia (bắt buộc)
+    - `description` (str | None): Mô tả phụ gia (tùy chọn)
+
+    **Returns:**
+    - additive: Thông tin phụ gia vừa tạo
+      - id (int): Mã phụ gia mới
+      - name (str): Tên phụ gia
+      - description (str | None): Mô tả phụ gia
+
+    **Lưu ý:**
+    - v0 không lưu dữ liệu vào database thật
+    - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
+    """
+    return AdditiveServiceV0.create_additive(name, description)
+
+
+@router.put("/{id}")
+def update_additive(id: int, name: str, description: str | None = None):
+    """
+    Cập nhật thông tin một phụ gia.
+
+    Version v0 cập nhật phụ gia trong bộ nhớ tạm thời, không lưu vào database thật.
+
+    **Args:**
+    - `id` (int): ID của phụ gia cần cập nhật (số nguyên dương)
+    - `name` (str): Tên phụ gia mới (bắt buộc)
+    - `description` (str | None): Mô tả phụ gia mới (tùy chọn)
+
+    **Returns:**
+    - additive: Thông tin phụ gia sau khi cập nhật
+      - id (int): Mã phụ gia
+      - name (str): Tên phụ gia
+      - description (str | None): Mô tả phụ gia
+
+    **Raises:**
+    - HTTPException 404: Nếu không tìm thấy phụ gia để cập nhật
+
+    **Lưu ý:**
+    - v0 không lưu dữ liệu vào database thật
+    - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
+    """
+    updated_additive = AdditiveServiceV0.update_additive(id, name, description)
+    if not updated_additive:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Additive with ID {id} not found"
+        )
+    return updated_additive
+
+
+@router.delete("/{id}")
+def delete_additive(id: int):
+    """
+    Xóa một phụ gia theo ID.
+
+    Version v0 xóa phụ gia trong bộ nhớ tạm thời, không xóa trong database thật.
+
+    **Args:**
+    - `id` (int): ID của phụ gia cần xóa (số nguyên dương)
+
+    **Returns:**
+    - message: Thông báo kết quả xóa
+      - message (str): "Additive deleted successfully"
+
+    **Raises:**
+    - HTTPException 404: Nếu không tìm thấy phụ gia để xóa
+
+    **Lưu ý:**
+    - v0 không xóa dữ liệu trong database thật
+    - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
+    """
+    result = AdditiveServiceV0.delete_additive(id)
+    if "message" not in result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Additive with ID {id} not found"
+        )
+    return result
