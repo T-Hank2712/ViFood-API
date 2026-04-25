@@ -45,8 +45,6 @@ def get_disease_by_id(id: int):
     - DiseaseResponse: Thông tin chi tiết bệnh
       - id (int): Mã bệnh
       - name (str): Tên bệnh
-      - description (str): Mô tả bệnh
-      - createdAt (datetime): Thời gian tạo
 
     **Raises:**
     - HTTPException 404: Nếu không tìm thấy bệnh
