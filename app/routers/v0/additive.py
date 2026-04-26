@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
+from app.models.food_category import FoodCategory
+from app.models.health_effect import HealthEffect
 from app.services.v0.additive_service import AdditiveServiceV0
 
 router = APIRouter(
@@ -20,7 +22,11 @@ def list_additives():
     - List[Additive]: Danh sách các phụ gia
       - id (int): Mã định danh phụ gia
       - name (str): Tên phụ gia
+      - code (str | None): Mã phụ gia (ví dụ: E100)
       - description (str | None): Mô tả phụ gia
+      - image (str | None): URL hình ảnh phụ gia
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa phụ gia
 
     **Lưu ý:**
     - Trong v0, dữ liệu luôn cố định (mock data)
@@ -42,9 +48,13 @@ def get_additive_by_id(id: int):
 
     **Returns:**
     - additive: Thông tin chi tiết phụ gia
-      - id (int): Mã phụ gia
+      - id (int): Mã định danh phụ gia
       - name (str): Tên phụ gia
+      - code (str | None): Mã phụ gia (ví dụ: E100)
       - description (str | None): Mô tả phụ gia
+      - image (str | None): URL hình ảnh phụ gia
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa phụ gia
 
     **Raises:**
     - HTTPException 404: Nếu không tìm thấy phụ gia
@@ -62,7 +72,8 @@ def get_additive_by_id(id: int):
 
 
 @router.post("/")
-def create_additive(name: str, description: str | None = None):
+def create_additive(name: str, description: str | None = None, code: str | None = None, image: str | None = None,
+                    effects: list[HealthEffect] | None = None, found_in: list[FoodCategory] | None = None):
     """
     Tạo mới một phụ gia.
 
@@ -74,19 +85,24 @@ def create_additive(name: str, description: str | None = None):
 
     **Returns:**
     - additive: Thông tin phụ gia vừa tạo
-      - id (int): Mã phụ gia mới
+      - id (int): Mã định danh phụ gia
       - name (str): Tên phụ gia
+      - code (str | None): Mã phụ gia (ví dụ: E100)
       - description (str | None): Mô tả phụ gia
+      - image (str | None): URL hình ảnh phụ gia
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa phụ gia
 
     **Lưu ý:**
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    return AdditiveServiceV0.create_additive(name, description)
+    return AdditiveServiceV0.create_additive(name, description, code, image, effects, found_in)
 
 
 @router.put("/{id}")
-def update_additive(id: int, name: str, description: str | None = None):
+def update_additive(id: int, name: str, description: str | None = None, code: str | None = None, image: str | None = None,
+                    effects: list[HealthEffect] | None = None, found_in: list[FoodCategory] | None = None):
     """
     Cập nhật thông tin một phụ gia.
 
@@ -96,12 +112,20 @@ def update_additive(id: int, name: str, description: str | None = None):
     - `id` (int): ID của phụ gia cần cập nhật (số nguyên dương)
     - `name` (str): Tên phụ gia mới (bắt buộc)
     - `description` (str | None): Mô tả phụ gia mới (tùy chọn)
+    - `code` (str | None): Mã phụ gia mới (tùy chọn)
+    - `image` (str | None): URL hình ảnh phụ gia mới (tùy chọn)
+    - `effects` (List[HealthEffect] | None): Danh sách tác động sức khỏe mới (tùy chọn)
+    - `found_in` (List[FoodCategory] | None): Danh sách loại thực phẩm chứa phụ gia mới (tùy chọn)
 
     **Returns:**
     - additive: Thông tin phụ gia sau khi cập nhật
-      - id (int): Mã phụ gia
+      - id (int): Mã định danh phụ gia
       - name (str): Tên phụ gia
+      - code (str | None): Mã phụ gia (ví dụ: E100)
       - description (str | None): Mô tả phụ gia
+      - image (str | None): URL hình ảnh phụ gia
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa phụ gia
 
     **Raises:**
     - HTTPException 404: Nếu không tìm thấy phụ gia để cập nhật
@@ -110,7 +134,7 @@ def update_additive(id: int, name: str, description: str | None = None):
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    updated_additive = AdditiveServiceV0.update_additive(id, name, description)
+    updated_additive = AdditiveServiceV0.update_additive(id, name, description, code, image, effects, found_in)
     if not updated_additive:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -110,6 +110,9 @@ def update_nutrient(id: int, name: str, description: str | None = None, image: s
     - `id` (int): ID của chất dinh dưỡng cần cập nhật (số nguyên dương)
     - `name` (str): Tên chất dinh dưỡng mới (bắt buộc)
     - `description` (str | None): Mô tả chất dinh dưỡng mới (tùy chọn)
+    - `image` (str | None): URL hình ảnh chất dinh dưỡng mới (tùy chọn)
+    - `effects` (List[HealthEffect] | None): Danh sách tác động sức khỏe mới (tùy chọn)
+    - `found_in` (List[FoodCategory] | None): Danh sách loại thực phẩm chứa chất dinh dưỡng mới (tùy chọn)
 
     **Returns:**
     - Nutrient: Thông tin chất dinh dưỡng sau khi cập nhật

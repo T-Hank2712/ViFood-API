@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
+from app.models.food_category import FoodCategory
+from app.models.health_effect import HealthEffect
 from app.services.v0.ingredient_service import IngredientServiceV0
 
 router = APIRouter(
@@ -21,6 +23,9 @@ def list_ingredients():
       - id (int): Mã định danh thành phần
       - name (str): Tên thành phần
       - description (str | None): Mô tả thành phần
+      - image (str | None): URL hình ảnh thành phần
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa thành phần
 
     **Lưu ý:**
     - Trong v0, dữ liệu luôn cố định (mock data)
@@ -45,6 +50,9 @@ def get_ingredient_by_id(id: int):
       - id (int): Mã thành phần
       - name (str): Tên thành phần
       - description (str | None): Mô tả thành phần
+      - image (str | None): URL hình ảnh thành phần
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa thành phần
 
     **Raises:**
     - HTTPException 404: Nếu không tìm thấy thành phần
@@ -62,7 +70,8 @@ def get_ingredient_by_id(id: int):
 
 
 @router.post("/")
-def create_ingredient(name: str, description: str | None = None):
+def create_ingredient(name: str, description: str | None = None, image: str | None = None,
+                      effects: list[HealthEffect] | None = None, found_in: list[FoodCategory] | None = None):
     """
     Tạo mới một thành phần.
 
@@ -77,16 +86,20 @@ def create_ingredient(name: str, description: str | None = None):
       - id (int): Mã thành phần mới
       - name (str): Tên thành phần
       - description (str | None): Mô tả thành phần
+      - image (str | None): URL hình ảnh thành phần
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa thành phần
 
     **Lưu ý:**
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    return IngredientServiceV0.create_ingredient(name, description)
+    return IngredientServiceV0.create_ingredient(name, description, image, effects, found_in)
 
 
 @router.put("/{id}")
-def update_ingredient(id: int, name: str, description: str | None = None):
+def update_ingredient(id: int, name: str, description: str | None = None, image: str | None = None,
+                      effects: list[HealthEffect] | None = None, found_in: list[FoodCategory] | None = None):
     """
     Cập nhật thông tin một thành phần.
 
@@ -96,12 +109,18 @@ def update_ingredient(id: int, name: str, description: str | None = None):
     - `id` (int): ID của thành phần cần cập nhật (số nguyên dương)
     - `name` (str): Tên thành phần mới (bắt buộc)
     - `description` (str | None): Mô tả thành phần mới (tùy chọn)
+    - `image` (str | None): URL hình ảnh thành phần
+    - `effects` (List[HealthEffect]): Các tác động sức khỏe liên quan
+    - `found_in` (List[FoodCategory]): Các loại thực phẩm chứa thành phần
 
     **Returns:**
     - ingredient: Thông tin thành phần sau khi cập nhật
       - id (int): Mã thành phần
       - name (str): Tên thành phần
       - description (str | None): Mô tả thành phần
+      - image (str | None): URL hình ảnh thành phần
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa thành phần
 
     **Raises:**
     - HTTPException 404: Nếu không tìm thấy thành phần cần cập nhật
@@ -110,7 +129,7 @@ def update_ingredient(id: int, name: str, description: str | None = None):
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    updated_ingredient = IngredientServiceV0.update_ingredient(id, name, description)
+    updated_ingredient = IngredientServiceV0.update_ingredient(id, name, description, image, effects, found_in)
     if not updated_ingredient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
