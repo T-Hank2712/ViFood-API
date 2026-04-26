@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException, status
 from app.services.v0.nutrient_service import NutrientServiceV0
 
+from app.models.food_category import FoodCategory
+from app.models.health_effect import HealthEffect
+
 router = APIRouter(
     prefix="/nutrients",
     tags=["Nutrients V0"]
@@ -21,6 +24,9 @@ def list_nutrients():
       - id (int): Mã định danh chất dinh dưỡng
       - name (str): Tên chất dinh dưỡng
       - description (str | None): Mô tả chất dinh dưỡng
+      - image (str | None): URL hình ảnh chất dinh dưỡng
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa chất dinh dưỡng
 
     **Lưu ý:**
     - Trong v0, dữ liệu luôn cố định (mock data)
@@ -45,6 +51,9 @@ def get_nutrient_by_id(id: int):
       - id (int): Mã chất dinh dưỡng
       - name (str): Tên chất dinh dưỡng
       - description (str | None): Mô tả chất dinh dưỡng
+      - image (str | None): URL hình ảnh chất dinh dưỡng
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa chất dinh dưỡng
 
     **Raises:**
     - HTTPException 404: Nếu không tìm thấy chất dinh dưỡng
@@ -62,7 +71,8 @@ def get_nutrient_by_id(id: int):
 
 
 @router.post("/")
-def create_nutrient(name: str, description: str | None = None):
+def create_nutrient(name: str, description: str | None = None, image: str | None = None,
+                    effects: list[HealthEffect] | None = None, found_in: list[FoodCategory] | None = None):
     """
     Tạo mới một chất dinh dưỡng.
 
@@ -77,16 +87,20 @@ def create_nutrient(name: str, description: str | None = None):
       - id (int): Mã chất dinh dưỡng mới
       - name (str): Tên chất dinh dưỡng
       - description (str | None): Mô tả chất dinh dưỡng
+      - image (str | None): URL hình ảnh chất dinh dưỡng
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa chất dinh dưỡng
 
     **Lưu ý:**
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    return NutrientServiceV0.create_nutrient(name, description)
+    return NutrientServiceV0.create_nutrient(name, description, image, effects, found_in)
 
 
 @router.put("/{id}")
-def update_nutrient(id: int, name: str, description: str | None = None):
+def update_nutrient(id: int, name: str, description: str | None = None, image: str | None = None,
+                    effects: list[HealthEffect] | None = None, found_in: list[FoodCategory] | None = None):
     """
     Cập nhật thông tin một chất dinh dưỡng.
 
@@ -102,6 +116,9 @@ def update_nutrient(id: int, name: str, description: str | None = None):
       - id (int): Mã chất dinh dưỡng
       - name (str): Tên chất dinh dưỡng
       - description (str | None): Mô tả chất dinh dưỡng
+      - image (str | None): URL hình ảnh chất dinh dưỡng
+      - effects (List[HealthEffect]): Các tác động sức khỏe liên quan
+      - found_in (List[FoodCategory]): Các loại thực phẩm chứa chất dinh dưỡng
 
     **Raises:**
     - HTTPException 404: Nếu không tìm thấy chất dinh dưỡng cần cập nhật
@@ -110,7 +127,7 @@ def update_nutrient(id: int, name: str, description: str | None = None):
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    updated_nutrient = NutrientServiceV0.update_nutrient(id, name, description)
+    updated_nutrient = NutrientServiceV0.update_nutrient(id, name, description, image, effects, found_in)
     if not updated_nutrient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
