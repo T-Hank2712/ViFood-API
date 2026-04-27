@@ -24,6 +24,7 @@ from app.routers.v0.ingredient import router as ingredient_v0_router
 from app.routers.v0.additive import router as additive_v0_router
 from app.routers.v0.health_effect import router as health_effect_v0_router
 from app.routers.v0.food_category import router as food_category_v0_router
+from app.routers.v0.search_nutrition import router as search_nutrition_v0_router
 
 
 # Tạo FastAPI app instance
@@ -100,6 +101,9 @@ app.include_router(health_effect_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 # Food Category router (v0)
 app.include_router(food_category_v0_router, prefix=f"{settings.api_prefix}/v0")
+
+# Search Nutrition router (v0)
+app.include_router(search_nutrition_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 
 # ==================== Root Endpoints ====================
