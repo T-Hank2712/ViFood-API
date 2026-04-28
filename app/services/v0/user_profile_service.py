@@ -95,6 +95,37 @@ class UserProfileServiceV0:
         profile.diseases = [d for d in profile.diseases if d.id != disease_id]
 
         return profile
+    
+    @staticmethod
+    def add_allergy(profile_id: int, allergy_id: int) -> UserProfile:
+        profile = UserProfileServiceV0.get_user_profile(profile_id)
+        if not profile:
+            raise ValueError("UserProfile not found")
+
+        allergy = AllergyServiceV0.get_allergy_by_id(allergy_id)
+        if not allergy:
+            raise ValueError("Allergy not found")
+
+        if any(a.id == allergy_id for a in profile.allergies):
+            return profile
+
+        profile.allergies.append(allergy)
+
+        return profile
+    
+    @staticmethod
+    def delete_allergy(profile_id: int, allergy_id: int) -> UserProfile:
+        profile = UserProfileServiceV0.get_user_profile(profile_id)
+        if not profile:
+            raise ValueError("UserProfile not found")
+
+        allergy = AllergyServiceV0.get_allergy_by_id(allergy_id)
+        if not allergy:
+            raise ValueError("Allergy not found")
+
+        profile.allergies = [a for a in profile.allergies if a.id != allergy_id]
+
+        return profile
 
     @staticmethod
     def create_user_profile(

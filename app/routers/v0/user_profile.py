@@ -84,6 +84,38 @@ async def delete_disease_from_user_profile(profile_id: int, disease_id: int):
             detail=str(e)
         )
         
+        
+@router.post(
+    "/{profile_id}/allergies/{allergy_id}",
+    summary="Thêm dị ứng vào hồ sơ người dùng",
+)
+async def add_allergy_to_user_profile(profile_id: int, allergy_id: int):
+    """Thêm dị ứng vào hồ sơ người dùng"""
+    try:
+        updated_profile = UserProfileServiceV0.add_allergy(profile_id, allergy_id)
+        return updated_profile
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+        
+        
+@router.delete(
+    "/{profile_id}/allergies/{allergy_id}",
+    summary="Xóa dị ứng khỏi hồ sơ người dùng",
+)
+async def delete_allergy_from_user_profile(profile_id: int, allergy_id: int):
+    """Xóa dị ứng khỏi hồ sơ người dùng"""
+    try:
+        updated_profile = UserProfileServiceV0.delete_allergy(profile_id, allergy_id)
+        return updated_profile
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+        
 
 @router.post(
     "/",
