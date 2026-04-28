@@ -52,7 +52,7 @@ def get_disease_by_id(id: int):
     **Lưu ý:**
     - v0 không truy vấn database thật
     """
-    disease = DiseaseServiceV0.get_by_id(id)
+    disease = DiseaseServiceV0.get_disease_by_id(id)
 
     if not disease:
         raise HTTPException(

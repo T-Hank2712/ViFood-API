@@ -14,7 +14,7 @@ class DiseaseServiceV0:
         return diseases
 
     @staticmethod
-    def get_by_id(disease_id: int):
+    def get_disease_by_id(disease_id: int):
         return next((d for d in diseases if d.id == disease_id), None)
     
     @staticmethod
