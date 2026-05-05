@@ -33,6 +33,13 @@ class UserProfileServiceV0:
     @staticmethod
     def get_user_profile(profile_id: int) -> UserProfile | None:
         return next((n for n in user_profile if n.profile_id == profile_id), None)
+    
+    @staticmethod
+    def get_health_goal_by_profile_id(profile_id: int) -> list[HealthGoal]:
+        profile = UserProfileServiceV0.get_user_profile(profile_id)
+        if not profile:
+            raise ValueError("UserProfile not found")
+        return profile.health_goals
 
     @staticmethod
     def add_health_goal(profile_id: int, health_goal_id: int) -> UserProfile:
@@ -66,6 +73,13 @@ class UserProfileServiceV0:
         return profile
     
     @staticmethod
+    def get_disease_by_profile_id(profile_id: int) -> list[Disease]:
+        profile = UserProfileServiceV0.get_user_profile(profile_id)
+        if not profile:
+            raise ValueError("UserProfile not found")
+        return profile.diseases
+    
+    @staticmethod
     def add_disease(profile_id: int, disease_id: int) -> UserProfile:
         profile = UserProfileServiceV0.get_user_profile(profile_id)
         if not profile:
@@ -95,6 +109,13 @@ class UserProfileServiceV0:
         profile.diseases = [d for d in profile.diseases if d.id != disease_id]
 
         return profile
+    
+    @staticmethod
+    def get_allergy_by_profile_id(profile_id: int) -> list[Allergy]:
+        profile = UserProfileServiceV0.get_user_profile(profile_id)
+        if not profile:
+            raise ValueError("UserProfile not found")
+        return profile.allergies
     
     @staticmethod
     def add_allergy(profile_id: int, allergy_id: int) -> UserProfile:
@@ -133,9 +154,6 @@ class UserProfileServiceV0:
         first_name: str,
         last_name: str,
         avatar: str,
-        health_goal_ids: list[int],
-        disease_ids: list[int],
-        allergy_ids: list[int],
         parent_profile_id: int | None = None
     ) -> UserProfile:
 
@@ -143,34 +161,20 @@ class UserProfileServiceV0:
         if not first_name or not last_name:
             raise ValueError("Missing required fields")
 
-        # 2. Map id -> object
-        def map_ids(ids, getter, name):
-            result = []
-            for i in set(ids):
-                obj = getter(i)
-                if not obj:
-                    raise ValueError(f"{name} {i} not found")
-                result.append(obj)
-            return result
-
-        health_goals = map_ids(health_goal_ids, HealthGoalServiceV0.get_health_goal_by_id, "HealthGoal")
-        diseases = map_ids(disease_ids, DiseaseServiceV0.get_disease_by_id, "Disease")
-        allergies = map_ids(allergy_ids, AllergyServiceV0.get_allergy_by_id, "Allergy")
-
-        # 3. Tạo profile
+        # 2. Tạo profile
         new_profile = UserProfile(
             profile_id=profile_id,
             parent_profile_id=parent_profile_id,
             firstName=first_name,
             lastName=last_name,
             avatar=avatar,
-            health_goals=health_goals,
-            diseases=diseases,
-            allergies=allergies,
+            health_goals=[],
+            diseases=[],
+            allergies=[],
             family_members=[]
         )
 
-        # 4. Nếu có parent → add vào family_members
+        # 3. Nếu có parent → add vào family_members
         if parent_profile_id:
             parent = UserProfileServiceV0.get_user_profile(parent_profile_id)
             if not parent:
@@ -182,3 +186,21 @@ class UserProfileServiceV0:
         user_profile.append(new_profile)
 
         return new_profile
+
+    @staticmethod
+    def update_user_profile(
+        profile_id: int,
+        first_name: str,
+        last_name: str,
+        avatar: str | None = None
+    ) -> UserProfile:
+        profile = UserProfileServiceV0.get_user_profile(profile_id)
+        if not profile:
+            raise ValueError("UserProfile not found")
+
+        profile.firstName = first_name
+        profile.lastName = last_name
+        if avatar is not None:
+            profile.avatar = avatar
+
+        return profile

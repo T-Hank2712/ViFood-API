@@ -21,6 +21,54 @@ async def get_user_profile(profile_id: int):
     return user_profile
 
 
+@router.get(
+    "/{profile_id}/health-goals",
+    summary="Lấy danh sách mục tiêu sức khỏe của hồ sơ người dùng",
+)
+async def get_health_goals_by_profile_id(profile_id: int):
+    """Lấy danh sách mục tiêu sức khỏe của hồ sơ người dùng theo ID"""
+    try:
+        health_goals = UserProfileServiceV0.get_heath_goal_by_profile_id(profile_id)
+        return health_goals
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.get(
+    "/{profile_id}/diseases",
+    summary="Lấy danh sách bệnh của hồ sơ người dùng",
+)
+async def get_diseases_by_profile_id(profile_id: int):
+    """Lấy danh sách bệnh của hồ sơ người dùng theo ID"""
+    try:
+        diseases = UserProfileServiceV0.get_disease_by_profile_id(profile_id)
+        return diseases
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.get(
+    "/{profile_id}/allergies",
+    summary="Lấy danh sách dị ứng của hồ sơ người dùng",
+)
+async def get_allergies_by_profile_id(profile_id: int):
+    """Lấy danh sách dị ứng của hồ sơ người dùng theo ID"""
+    try:
+        allergies = UserProfileServiceV0.get_allergy_by_profile_id(profile_id)
+        return allergies
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
 @router.post(
     "/{profile_id}/health-goals/{health_goal_id}",
     summary="Thêm mục tiêu sức khỏe vào hồ sơ người dùng",
@@ -126,9 +174,6 @@ async def create_user_profile(
         first_name: str,
         last_name: str,
         avatar: str,
-        health_goal_ids: list[int],
-        disease_ids: list[int],
-        allergy_ids: list[int],
         parent_profile_id: int | None = None):
     """Tạo hồ sơ người dùng với full thông tin"""
     try:
@@ -137,14 +182,37 @@ async def create_user_profile(
             first_name,
             last_name,
             avatar,
-            health_goal_ids,
-            disease_ids,
-            allergy_ids,
             parent_profile_id
         )
         return new_profile
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+        
+
+@router.put(
+    "/{profile_id}",
+    summary="Cập nhật thông tin hồ sơ người dùng",
+)
+async def update_user_profile(
+    profile_id: int,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    avatar: str | None = None
+):
+    """Cập nhật thông tin hồ sơ người dùng"""
+    try:
+        updated_profile = UserProfileServiceV0.update_user_profile(
+            profile_id,
+            first_name,
+            last_name,
+            avatar
+        )
+        return updated_profile
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
