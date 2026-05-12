@@ -2,9 +2,14 @@
 Dependencies
 Các dependency có thể inject vào route handlers
 """
-from fastapi import Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from typing import Optional
+
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 from app.core.config import settings
+
+security = HTTPBearer()
 
 
 async def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")) -> str:
@@ -36,42 +41,73 @@ async def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Ke
     return x_api_key
 
 
-async def verify_token(authorization: Optional[str] = Header(None)) -> str:
-    """
-    Dependency để verify token (placeholder cho tương lai)
+# async def verify_token(authorization: Optional[str] = Header(None)) -> str:
+#     """
+#     Dependency để verify token (placeholder cho tương lai)
     
-    Args:
-        authorization: Bearer token từ header
+#     Args:
+#         authorization: Bearer token từ header
         
-    Returns:
-        Token string
+#     Returns:
+#         Token string
         
-    Raises:
-        HTTPException: Nếu token không hợp lệ
-    """
-    # TODO: Implement actual token verification
-    # Hiện tại chỉ là placeholder
-    if authorization is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing authentication token"
+#     Raises:
+#         HTTPException: Nếu token không hợp lệ
+#     """
+#     # TODO: Implement actual token verification
+#     # Hiện tại chỉ là placeholder
+#     if authorization is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Missing authentication token"
+#         )
+#     return authorization
+
+
+def verify_token(token: str):
+
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
         )
-    return authorization
+
+        return payload
+
+    except JWTError:
+        return None
 
 
-async def get_current_user(token: str = Header(None)):
-    """
-    Dependency để lấy user hiện tại từ token (placeholder cho tương lai)
+# async def get_current_user(token: str = Header(None)):
+#     """
+#     Dependency để lấy user hiện tại từ token (placeholder cho tương lai)
     
-    Args:
-        token: Authentication token
+#     Args:
+#         token: Authentication token
         
-    Returns:
-        User object
-    """
-    # TODO: Implement actual user retrieval from token
-    # Hiện tại chỉ là placeholder
-    return {"user_id": "1", "username": "demo_user"}
+#     Returns:
+#         User object
+#     """
+#     # TODO: Implement actual user retrieval from token
+#     # Hiện tại chỉ là placeholder
+#     return {"user_id": "1", "username": "demo_user"}
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+
+    token = credentials.credentials
+
+    payload = verify_token(token)
+
+    if not payload:
+        raise HTTPException(
+            status_code=401,
+            detail="Token không hợp lệ"
+        )
+
+    return payload
 
 
 def require_admin():

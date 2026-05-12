@@ -11,6 +11,8 @@ from app.core.config import settings
 from app.models.base import HealthCheckResponse
 from app.utils.file_utils import ensure_directory_exists
 
+from app.core.database import neo4j_db
+
 # Import routers
 from app.routers import upload, example
 from app.routers.products_alias import router as products_alias_router
@@ -26,6 +28,7 @@ from app.routers.v0.health_effect import router as health_effect_v0_router
 from app.routers.v0.food_category import router as food_category_v0_router
 from app.routers.v0.search_nutrition import router as search_nutrition_v0_router
 from app.routers.v0.user_profile import router as user_profile_v0_router
+from app.routers.v0.auth import router as auth_v0_router
 
 
 # Tạo FastAPI app instance
@@ -109,6 +112,9 @@ app.include_router(search_nutrition_v0_router, prefix=f"{settings.api_prefix}/v0
 # User Profile router (v0)
 app.include_router(user_profile_v0_router, prefix=f"{settings.api_prefix}/v0")
 
+# Auth router (v0)
+app.include_router(auth_v0_router, prefix=f"{settings.api_prefix}/v0")
+
 
 # ==================== Root Endpoints ====================
 
@@ -139,6 +145,7 @@ async def root():
             "products_v0": f"{settings.api_prefix}/v0/products/{{id}}",
             "products_v1": f"{settings.api_prefix}/v1/products/{{id}}"
         }
+        
     }
 
 
@@ -156,6 +163,17 @@ async def health_check():
         timestamp=datetime.now(),
         version=settings.app_version
     )
+
+
+@app.get("/database-test")
+async def database_test():
+    """Endpoint test kết nối database"""
+    try:
+        with neo4j_db.get_session() as session:
+            result = session.run("RETURN 1 AS number")
+            return {"status": "success", "data": result.data()}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 # ==================== Startup/Shutdown Events ====================

@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     app_description: str = "A scalable FastAPI application with modular structure"
     debug: bool = False
     
+    # ==================== Database Settings ====================
+    neo4j_uri: str
+    neo4j_username: str
+    neo4j_password: str
+    
     # ==================== Server Settings ====================
     host: str = "0.0.0.0"
     port: int = 8000
@@ -47,10 +52,10 @@ class Settings(BaseSettings):
     database_url: Optional[str] = None
     
     # ==================== Security Settings ====================
-    api_key: str = "your-secret-api-key-change-this"  # API Key để bảo vệ endpoints
-    secret_key: Optional[str] = None
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
+    ALGORITHM: str
     
     class Config:
         env_file = ".env"

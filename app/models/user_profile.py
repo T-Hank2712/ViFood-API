@@ -10,8 +10,8 @@ from app.models.allergy import Allergy
 class UserProfile(BaseModel):
     profile_id: int
     userId: int | None = None
-    firstName: str
-    lastName: str
+    first_name: str
+    last_name: str
     avatar: str | None = None
     health_goals: list[HealthGoal] = []
     diseases: list[Disease] = []
