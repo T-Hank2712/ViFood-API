@@ -70,7 +70,8 @@ class AuthServiceV0:
 
         payload = {
             "user_id": user.id,
-            "email": user.email
+            "email": user.email,
+            "profile_id": user.profile_id,
         }
 
         access_token = create_access_token(payload)
