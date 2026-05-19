@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.core.dependencies import get_current_user
 from app.repositories.profile_repo import UserProfileRepository
-from app.repositories.user_repo import UserRepository
-from app.schemas.auth import RegisterRequest
+from app.schemas.auth import (RegisterRequest,LoginRequest)
 from app.services.v0.auth_service import AuthServiceV0
 
 router = APIRouter(
@@ -40,10 +38,10 @@ def register(data: RegisterRequest):
     
     
 @router.post("/login")
-def login(email: str, password: str):
+def login(data: LoginRequest):
     result = auth_service.login(
-        email=email,
-        password=password
+        email=data.email,
+        password=data.password
     )
     return {
         "message": "Login success",

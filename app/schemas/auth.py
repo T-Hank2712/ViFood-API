@@ -1,4 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field, model_validator
+import re
+
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -8,11 +10,35 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=6, max_length=72)
     confirm_password: str
     
-    @model_validator(mode="after")
-    def validate_passwords_match(self):
-        if self.password != self.confirm_password:
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def validate_name(cls, v):
+        pattern = r"^[A-Za-zÀ-ỹ\s]+$"
+        if not re.match(pattern, v):
+            raise ValueError("Name can only contain letters and spaces")
+        return v
+    
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v):
+        pattern = r"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+        if not re.match(pattern, v):
+            raise ValueError("Invalid email format")
+        return v
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 6:
+            raise ValueError("Password must be at least 8 characters")
+        return v
+    
+    @field_validator("confirm_password")
+    @classmethod
+    def check_password_match(cls, v, info):
+        if "password" in info.data and v != info.data["password"]:
             raise ValueError("Passwords do not match")
-        return self
+        return v
 
 
 class LoginRequest(BaseModel):
