@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from app.repositories.profile_repo import UserProfileRepository
-from app.schemas.auth import (RegisterRequest,LoginRequest)
+from app.schemas.auth import (RegisterRequest, LoginRequest)
 from app.services.v0.auth_service import AuthServiceV0
 
 router = APIRouter(
