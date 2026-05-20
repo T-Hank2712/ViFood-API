@@ -39,11 +39,15 @@ async def get_all_user_profiles():
     "/{profile_id:int}",
     summary="Lấy thông tin hồ sơ người dùng"
 )
-async def get_user_profile(profile_id: int):
+async def get_user_profile(
+    profile_id: int,
+    current_user=Depends(get_current_user)
+):
 
     try:
         profile = UserProfileServiceV0.get_user_profile(
-            profile_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id
         )
 
         return {
@@ -55,6 +59,13 @@ async def get_user_profile(profile_id: int):
 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+    except PermissionError as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
             detail=str(e)
         )
 
@@ -72,10 +83,10 @@ async def create_user_profile(
 
     try:
         profile = UserProfileServiceV0.create_user_profile(
+            current_user_id=current_user["user_id"],
             first_name=first_name,
             last_name=last_name,
-            avatar=avatar,
-            parent_profile_id=current_user["profile_id"]
+            avatar=avatar
         )
 
         return {
@@ -87,6 +98,13 @@ async def create_user_profile(
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    except PermissionError as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
             detail=str(e)
         )
 
@@ -105,7 +123,7 @@ async def update_user_profile(
 
     try:
         profile = UserProfileServiceV0.update_user_profile(
-            current_profile_id=current_user["profile_id"],
+            current_user_id=current_user["user_id"],
             target_profile_id=profile_id,
             first_name=first_name,
             last_name=last_name,
@@ -147,8 +165,8 @@ async def get_health_goals(
 
     try:
         goals = UserProfileServiceV0.get_health_goals(
-            current_user["profile_id"],
-            profile_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id
         )
 
         return {
@@ -183,9 +201,9 @@ async def add_health_goal(
 
     try:
         profile = UserProfileServiceV0.add_health_goal(
-            current_user["profile_id"],
-            profile_id,
-            health_goal_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id,
+            health_goal_id=health_goal_id
         )
 
         return {
@@ -220,9 +238,9 @@ async def delete_health_goal(
 
     try:
         profile = UserProfileServiceV0.delete_health_goal(
-            current_user["profile_id"],
-            profile_id,
-            health_goal_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id,
+            health_goal_id=health_goal_id
         )
 
         return {
@@ -260,8 +278,8 @@ async def get_diseases(
 
     try:
         diseases = UserProfileServiceV0.get_diseases(
-            current_user["profile_id"],
-            profile_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id
         )
 
         return {
@@ -296,9 +314,9 @@ async def add_disease(
 
     try:
         profile = UserProfileServiceV0.add_disease(
-            current_user["profile_id"],
-            profile_id,
-            disease_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id,
+            disease_id=disease_id
         )
 
         return {
@@ -333,9 +351,9 @@ async def delete_disease(
 
     try:
         profile = UserProfileServiceV0.delete_disease(
-            current_user["profile_id"],
-            profile_id,
-            disease_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id,
+            disease_id=disease_id
         )
 
         return {
@@ -373,8 +391,8 @@ async def get_allergies(
 
     try:
         allergies = UserProfileServiceV0.get_allergies(
-            current_user["profile_id"],
-            profile_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id
         )
 
         return {
@@ -409,9 +427,9 @@ async def add_allergy(
 
     try:
         profile = UserProfileServiceV0.add_allergy(
-            current_user["profile_id"],
-            profile_id,
-            allergy_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id,
+            allergy_id=allergy_id
         )
 
         return {
@@ -446,9 +464,9 @@ async def delete_allergy(
 
     try:
         profile = UserProfileServiceV0.delete_allergy(
-            current_user["profile_id"],
-            profile_id,
-            allergy_id
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id,
+            allergy_id=allergy_id
         )
 
         return {
@@ -475,18 +493,23 @@ async def delete_allergy(
 # CURRENT USER
 # =========================
 
-@router.get("/me")
+@router.get(
+    "/me",
+    summary="Lấy thông tin người dùng hiện tại"
+)
 async def me(
     current_user=Depends(get_current_user)
 ):
 
     user_id = current_user["user_id"]
 
-    user = UserRepository.get_user_by_id(user_id)
+    user = UserRepository.get_user_by_id(
+        user_id
+    )
 
     if not user:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
 
@@ -495,6 +518,7 @@ async def me(
     )
 
     return {
+        "message": "Get current user success",
         "user": user,
         "profile": profile
     }
