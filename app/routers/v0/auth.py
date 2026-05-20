@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
-from app.core.dependencies import get_current_user
-from app.schemas.auth import RegisterRequest
+from app.repositories.profile_repo import UserProfileRepository
+from app.schemas.auth import (RegisterRequest, LoginRequest)
 from app.services.v0.auth_service import AuthServiceV0
 
 router = APIRouter(
@@ -10,6 +10,7 @@ router = APIRouter(
 )
 
 auth_service = AuthServiceV0()
+profile_repo = UserProfileRepository()
 
 
 @router.post("/register")
@@ -37,10 +38,10 @@ def register(data: RegisterRequest):
     
     
 @router.post("/login")
-def login(email: str, password: str):
+def login(data: LoginRequest):
     result = auth_service.login(
-        email=email,
-        password=password
+        email=data.email,
+        password=data.password
     )
     return {
         "message": "Login success",
@@ -56,10 +57,3 @@ def refresh_access_token(refresh_token: str):
         "message": "Refresh access token success",
         "data": result
     }
-
-
-@router.get("/me")
-def get_me(
-    current_user=Depends(get_current_user)
-):
-    return current_user
