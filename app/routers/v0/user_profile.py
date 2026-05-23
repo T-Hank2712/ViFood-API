@@ -221,7 +221,7 @@ async def add_health_goal(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -258,7 +258,7 @@ async def delete_health_goal(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -297,7 +297,7 @@ async def get_diseases(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -334,7 +334,7 @@ async def add_disease(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -371,7 +371,7 @@ async def delete_disease(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -410,7 +410,7 @@ async def get_allergies(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -447,7 +447,7 @@ async def add_allergy(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -484,7 +484,7 @@ async def delete_allergy(
     except ValueError as e:
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 
@@ -519,6 +519,8 @@ async def me(
 
     return {
         "message": "Get current user success",
-        "user": user,
-        "profile": profile
+        "data": {
+            "user": user,
+            "profile": profile
+        }
     }

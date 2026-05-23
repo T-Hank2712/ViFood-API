@@ -133,11 +133,11 @@ class UserProfileRepository:
         )
 
         if exists:
-            return profile
+            raise ValueError("Health goal already exists")
 
         profile.health_goals.append(health_goal)
 
-        return profile
+        return profile.health_goals
 
     def delete_health_goal(
         self,
@@ -156,7 +156,7 @@ class UserProfileRepository:
             if goal.id != health_goal_id
         ]
 
-        return profile
+        return profile.health_goals
 
     # =========================
     # DISEASES
@@ -191,11 +191,11 @@ class UserProfileRepository:
         )
 
         if exists:
-            return profile
+            raise ValueError("Disease already exists")
 
         profile.diseases.append(disease)
 
-        return profile
+        return profile.diseases
 
     def delete_disease(
         self,
@@ -214,7 +214,7 @@ class UserProfileRepository:
             if disease.id != disease_id
         ]
 
-        return profile
+        return profile.diseases
 
     # =========================
     # ALLERGIES
@@ -249,11 +249,11 @@ class UserProfileRepository:
         )
 
         if exists:
-            return profile
+            raise ValueError("Allergy already exists")
 
         profile.allergies.append(allergy)
 
-        return profile
+        return profile.allergies
 
     def delete_allergy(
         self,
@@ -272,7 +272,7 @@ class UserProfileRepository:
             if allergy.id != allergy_id
         ]
 
-        return profile
+        return profile.allergies
 
     # =========================
     # FAMILY MEMBERS
