@@ -21,6 +21,8 @@ class RegisterRequest(BaseModel):
     @field_validator("email")
     @classmethod
     def validate_email(cls, v):
+        v = v.strip().lower()
+        
         pattern = r"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
         if not re.match(pattern, v):
             raise ValueError("Invalid email format")
@@ -44,6 +46,11 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    
+    @field_validator("email")
+    @classmethod
+    def normalize(cls, v):
+        return v.strip().lower()
 
 
 class TokenResponse(BaseModel):
