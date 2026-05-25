@@ -110,8 +110,8 @@ class UserProfileServiceV0:
     def update_user_profile(
         current_user_id: int,
         target_profile_id: int,
-        first_name: str,
-        last_name: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
         avatar: str | None = None
     ) -> UserProfile:
 
@@ -120,23 +120,30 @@ class UserProfileServiceV0:
             target_profile_id
         )
 
-        if not first_name.strip():
-            raise ValueError("First name is required")
-
-        if not last_name.strip():
-            raise ValueError("Last name is required")
-
-        profile = profile_repo.update_user_profile(
-            profile_id=target_profile_id,
-            first_name=first_name.strip(),
-            last_name=last_name.strip(),
-            avatar=avatar
-        )
+        # lấy profile hiện tại (để merge dữ liệu)
+        profile = profile_repo.get_user_profile_by_id(target_profile_id)
 
         if not profile:
             raise ValueError("UserProfile not found")
 
-        return profile
+        # chỉ update field nào được gửi lên
+        updated_first_name = first_name.strip() if first_name is not None else profile.first_name
+        updated_last_name = last_name.strip() if last_name is not None else profile.last_name
+        updated_avatar = avatar if avatar is not None else profile.avatar
+
+        # validate nếu có gửi giá trị mới
+        if first_name is not None and not updated_first_name:
+            raise ValueError("First name cannot be empty")
+
+        if last_name is not None and not updated_last_name:
+            raise ValueError("Last name cannot be empty")
+
+        return profile_repo.update_user_profile(
+            profile_id=target_profile_id,
+            first_name=updated_first_name,
+            last_name=updated_last_name,
+            avatar=updated_avatar
+        )
 
     # =========================
     # HEALTH GOALS
