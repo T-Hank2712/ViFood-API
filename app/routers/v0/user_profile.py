@@ -109,18 +109,17 @@ async def create_user_profile(
         )
 
 
-@router.put(
+@router.patch(
     "/{profile_id}",
-    summary="Cập nhật hồ sơ người dùng"
+    summary="Cập nhật một phần hồ sơ người dùng"
 )
 async def update_user_profile(
     profile_id: int,
-    first_name: str,
-    last_name: str,
+    first_name: str | None = None,
+    last_name: str | None = None,
     avatar: str | None = None,
     current_user=Depends(get_current_user)
 ):
-
     try:
         profile = UserProfileServiceV0.update_user_profile(
             current_user_id=current_user["user_id"],
@@ -136,14 +135,12 @@ async def update_user_profile(
         }
 
     except PermissionError as e:
-
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=str(e)
         )
 
     except ValueError as e:
-
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
