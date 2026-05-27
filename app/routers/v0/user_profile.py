@@ -7,6 +7,8 @@ from app.services.v0.user_profile_service import (
     UserProfileServiceV0
 )
 
+from app.schemas.update_profile import UpdateProfileRequest
+
 from app.core.dependencies import get_current_user
 
 router = APIRouter(
@@ -115,18 +117,14 @@ async def create_user_profile(
 )
 async def update_user_profile(
     profile_id: int,
-    first_name: str | None = None,
-    last_name: str | None = None,
-    avatar: str | None = None,
+    payload: UpdateProfileRequest,
     current_user=Depends(get_current_user)
 ):
     try:
         profile = UserProfileServiceV0.update_user_profile(
             current_user_id=current_user["user_id"],
             target_profile_id=profile_id,
-            first_name=first_name,
-            last_name=last_name,
-            avatar=avatar
+            payload=payload
         )
 
         return {

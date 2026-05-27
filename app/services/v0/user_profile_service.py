@@ -10,6 +10,8 @@ from app.services.v0.allergy_service import AllergyServiceV0
 
 from app.repositories.profile_repo import UserProfileRepository
 
+from app.schemas.update_profile import UpdateProfileRequest
+
 profile_repo = UserProfileRepository()
 
 
@@ -110,9 +112,7 @@ class UserProfileServiceV0:
     def update_user_profile(
         current_user_id: int,
         target_profile_id: int,
-        first_name: str | None = None,
-        last_name: str | None = None,
-        avatar: str | None = None
+        payload: UpdateProfileRequest
     ) -> UserProfile:
 
         UserProfileServiceV0._validate_profile_access(
@@ -120,22 +120,33 @@ class UserProfileServiceV0:
             target_profile_id
         )
 
-        # lấy profile hiện tại (để merge dữ liệu)
         profile = profile_repo.get_user_profile_by_id(target_profile_id)
 
         if not profile:
             raise ValueError("UserProfile not found")
 
-        # chỉ update field nào được gửi lên
-        updated_first_name = first_name.strip() if first_name is not None else profile.first_name
-        updated_last_name = last_name.strip() if last_name is not None else profile.last_name
-        updated_avatar = avatar if avatar is not None else profile.avatar
+        updated_first_name = (
+            payload.first_name.strip()
+            if payload.first_name is not None
+            else profile.first_name
+        )
 
-        # validate nếu có gửi giá trị mới
-        if first_name is not None and not updated_first_name:
+        updated_last_name = (
+            payload.last_name.strip()
+            if payload.last_name is not None
+            else profile.last_name
+        )
+
+        updated_avatar = (
+            payload.avatar
+            if payload.avatar is not None
+            else profile.avatar
+        )
+
+        if payload.first_name is not None and not updated_first_name:
             raise ValueError("First name cannot be empty")
 
-        if last_name is not None and not updated_last_name:
+        if payload.last_name is not None and not updated_last_name:
             raise ValueError("Last name cannot be empty")
 
         return profile_repo.update_user_profile(
