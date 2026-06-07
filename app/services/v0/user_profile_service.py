@@ -61,6 +61,19 @@ class UserProfileServiceV0:
         raise PermissionError(
             "You cannot access this profile"
         )
+        
+    @staticmethod
+    def get_family_members(
+        current_user_id: int,
+        target_profile_id: int
+    ) -> list[UserProfile]:
+
+        profile = UserProfileServiceV0.get_user_profile(
+            current_user_id,
+            target_profile_id
+        )
+
+        return profile.family_members
 
     @staticmethod
     def create_user_profile(
@@ -152,7 +165,42 @@ class UserProfileServiceV0:
             last_name=updated_last_name,
             avatar=updated_avatar
         )
+        
+    @staticmethod
+    def delete_user_profile(
+        current_user_id: int,
+        target_profile_id: int
+    ) -> bool:
 
+        profile = profile_repo.get_user_profile_by_id(
+            target_profile_id
+        )
+
+        if not profile:
+            raise ValueError("UserProfile not found")
+
+        # Chỉ được xóa family member của mình
+        if profile.parent_profile_id is None:
+            raise PermissionError(
+                "You can only delete family members"
+            )
+
+        parent = profile_repo.get_user_profile_by_id(
+            profile.parent_profile_id
+        )
+
+        if not parent:
+            raise ValueError("Parent profile not found")
+
+        if parent.userId != current_user_id:
+            raise PermissionError(
+                "You can only delete your own family members"
+            )
+
+        return profile_repo.delete_user_profile(
+            target_profile_id
+        )
+        
     # =========================
     # HEALTH GOALS
     # =========================

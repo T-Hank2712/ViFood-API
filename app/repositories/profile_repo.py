@@ -110,7 +110,44 @@ class UserProfileRepository:
         if profile is None:
             return False
 
+        # Nếu là family member thì remove khỏi parent
+        if profile.parent_profile_id is not None:
+            parent = self.get_user_profile_by_id(profile.parent_profile_id)
+
+            if parent is not None:
+                parent.family_members = [
+                    member
+                    for member in parent.family_members
+                    if member.profile_id != profile_id
+                ]
+
         fake_user_profiles_db.remove(profile)
+
+        return True
+    
+    def delete_family_member_profile(
+        self,
+        member_profile_id: int
+    ) -> bool:
+
+        member = self.get_user_profile_by_id(member_profile_id)
+
+        if member is None:
+            return False
+
+        # Tìm parent và remove khỏi danh sách family members
+        if member.parent_profile_id is not None:
+            parent = self.get_user_profile_by_id(member.parent_profile_id)
+
+            if parent is not None:
+                parent.family_members = [
+                    family_member
+                    for family_member in parent.family_members
+                    if family_member.profile_id != member_profile_id
+                ]
+
+        # Xóa profile khỏi database
+        fake_user_profiles_db.remove(member)
 
         return True
 
