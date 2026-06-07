@@ -57,10 +57,12 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int
     ALGORITHM: str
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-        env_file_encoding = 'utf-8'
+    # Pydantic v2 configuration for BaseSettings
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": False,
+        "env_file_encoding": "utf-8",
+    }
 
 
 @lru_cache()

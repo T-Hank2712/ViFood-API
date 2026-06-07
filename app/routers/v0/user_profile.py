@@ -73,22 +73,20 @@ async def get_user_profile(
 
 
 @router.post(
-    "/",
+    "/family-member",
     summary="Tạo hồ sơ người dùng"
 )
 async def create_user_profile(
-    first_name: str,
-    last_name: str,
-    avatar: str | None = None,
+    payload: UpdateProfileRequest,
     current_user=Depends(get_current_user)
 ):
 
     try:
         profile = UserProfileServiceV0.create_user_profile(
             current_user_id=current_user["user_id"],
-            first_name=first_name,
-            last_name=last_name,
-            avatar=avatar
+            first_name=payload.first_name,
+            last_name=payload.last_name,
+            avatar=payload.avatar
         )
 
         return {

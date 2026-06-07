@@ -76,7 +76,6 @@ class UserProfileServiceV0:
         if not last_name.strip():
             raise ValueError("Last name is required")
 
-        # tìm profile chính của user hiện tại
         parent_profile = profile_repo.get_user_profile_by_user_id(
             current_user_id
         )
@@ -101,12 +100,10 @@ class UserProfileServiceV0:
             profile
         )
 
-        profile_repo.add_family_member(
+        return profile_repo.add_family_member(
             parent_profile.profile_id,
             created_profile
         )
-
-        return created_profile
 
     @staticmethod
     def update_user_profile(
