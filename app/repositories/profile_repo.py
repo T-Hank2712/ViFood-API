@@ -103,7 +103,7 @@ class UserProfileRepository:
     def delete_user_profile(
         self,
         profile_id: int
-    ) -> bool:
+    ) -> UserProfile:
 
         profile = self.get_user_profile_by_id(profile_id)
 
@@ -122,9 +122,9 @@ class UserProfileRepository:
                 ]
 
         fake_user_profiles_db.remove(profile)
+        
+        return parent.family_members if parent else []
 
-        return True
-    
     def delete_family_member_profile(
         self,
         member_profile_id: int
