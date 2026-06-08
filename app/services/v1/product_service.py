@@ -4,20 +4,20 @@ Nơi triển khai truy vấn DB cho version v1.
 """
 from datetime import datetime
 
-from app.models.product import ProductNutrition, ProductResponse
+from app.models.product import ProductNutrition, Product
 
 
 class ProductServiceV1:
-    async def get_by_id(self, product_id: int) -> ProductResponse:
+    async def get_by_id(self, product_id: int) -> Product:
         """
         TODO (v1):
         - Query database theo product_id
-        - Map dữ liệu DB sang ProductResponse
+        - Map dữ liệu DB sang Product
         - Nếu không tìm thấy thì raise HTTPException(404)
 
         Tạm thời trả mock để endpoint v1 chạy ổn trong lúc phát triển.
         """
-        return ProductResponse(
+        return Product(
             _id=product_id,
             product_name="Sữa ABC",
             age_range="1-3 tuổi",

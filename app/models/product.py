@@ -2,6 +2,7 @@
 Product Models
 Schema cho product response
 """
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -9,29 +10,47 @@ from pydantic import BaseModel, Field
 
 
 class ProductNutrition(BaseModel):
-    energy: str = Field(..., example="450 kcal")
-    protein: str = Field(..., example="12 g")
-    fat: str = Field(..., example="18 g")
-    sugar: str = Field(..., example="20 g")
+    energy: Optional[str] = Field(default=None, example="450 kcal")
+    protein: Optional[str] = Field(default=None, example="12 g")
+    fat: Optional[str] = Field(default=None, example="18 g")
+    sugar: Optional[str] = Field(default=None, example="20 g")
 
 
-class ProductResponse(BaseModel):
+class Product(BaseModel):
     id: int = Field(..., alias="_id", example=123)
+    user_id: int = Field(..., example=1)
     product_name: str = Field(..., example="Sữa ABC")
-    age_range: str = Field(..., example="1-3 tuổi")
-    ingredients: List[str] = Field(..., example=["Sữa bột", "Đường", "Dầu thực vật"])
-    additive: Optional[List[str]] = Field(default=None, example=["Chất điều vị (INS 621)"])
+
+    age_range: Optional[str] = Field(default=None, example="1-3 tuổi")
+
+    ingredients: List[str] = Field(
+        default_factory=list,
+        example=["Sữa bột", "Đường", "Dầu thực vật"]
+    )
+
+    additive: List[str] = Field(
+        default_factory=list,
+        example=["Chất điều vị (INS 621)"]
+    )
+
     nutrition: ProductNutrition
-    manufacturer: str = Field(..., example="Công ty XYZ")
-    mfg_date: str = Field(..., example="2025-12-31")
-    expiry_date: str = Field(..., example="2027-12-31")
-    net_weight: str = Field(..., example="900g")
-    allergen: str = Field(..., example="Sản phẩm có chứa sữa")
-    warning: str = Field(..., example="Không sử dụng cho trẻ em dưới 3 tuổi")
-    origin: str = Field(..., example="Việt Nam")
+
+    manufacturer: Optional[str] = Field(default=None, example="Công ty XYZ")
+
+    mfg_date: Optional[str] = Field(default=None, example="2025-12-31")
+    expiry_date: Optional[str] = Field(default=None, example="2027-12-31")
+
+    net_weight: Optional[str] = Field(default=None, example="900g")
+
+    allergen: Optional[str] = Field(default=None, example="Sản phẩm có chứa sữa")
+
+    warning: Optional[str] = Field(default=None, example="Không sử dụng cho trẻ em dưới 3 tuổi")
+
+    origin: Optional[str] = Field(default=None, example="Việt Nam")
+
     createdAt: datetime = Field(..., example="2026-03-02T13:16:00.955Z")
     timeZone: str = Field(..., example="Asia/Ho_Chi_Minh")
-    createdAtLocal: str = Field(..., example="2026-03-02 20:16:00")
+    createdAtLocal: datetime = Field(..., example="2026-03-02 20:16:00")
 
     class Config:
         populate_by_name = True
@@ -40,14 +59,8 @@ class ProductResponse(BaseModel):
                 "_id": 123,
                 "product_name": "Sữa ABC",
                 "age_range": "1-3 tuổi",
-                "ingredients": [
-                    "Sữa bột",
-                    "Đường",
-                    "Dầu thực vật"
-                ],
-                "additive": [
-                    "Chất điều vị (INS 621)"
-                ],
+                "ingredients": ["Sữa bột", "Đường", "Dầu thực vật"],
+                "additive": ["Chất điều vị (INS 621)"],
                 "nutrition": {
                     "energy": "450 kcal",
                     "protein": "12 g",
@@ -66,3 +79,18 @@ class ProductResponse(BaseModel):
                 "createdAtLocal": "2026-03-02 20:16:00"
             }
         }
+        
+        
+class ProductCreate(BaseModel):
+    product_name: str
+    age_range: str | None = None
+    ingredients: list[str] = []
+    additive: list[str] = []
+    nutrition: ProductNutrition | None = None
+    manufacturer: str | None = None
+    mfg_date: str | None = None
+    expiry_date: str | None = None
+    net_weight: str | None = None
+    allergen: str | None = None
+    warning: str | None = None
+    origin: str | None = None
