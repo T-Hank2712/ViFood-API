@@ -12,26 +12,32 @@ from app.repositories.profile_repo import UserProfileRepository
 
 from app.schemas.update_profile import UpdateProfileRequest
 
-profile_repo = UserProfileRepository()
+from app.db import db
+
+health_goal_service = HealthGoalServiceV0()
+disease_service = DiseaseServiceV0()
+allergy_service = AllergyServiceV0()
 
 
 class UserProfileServiceV0:
+    
+    def __init__(self):
+        self.profile_repo = UserProfileRepository(db)
 
     # =========================
     # PROFILE
     # =========================
 
-    @staticmethod
-    def get_all_user_profiles() -> list[UserProfile]:
-        return profile_repo.get_all_user_profiles()
+    def get_all_user_profiles(self) -> list[UserProfile]:
+        return self.profile_repo.get_all_user_profiles()
 
-    @staticmethod
     def get_user_profile(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> UserProfile:
 
-        profile = profile_repo.get_user_profile_by_id(
+        profile = self.profile_repo.get_user_profile_by_id(
             target_profile_id
         )
 
@@ -44,7 +50,7 @@ class UserProfileServiceV0:
 
         # 2. parent access
         if profile.parent_profile_id:
-            parent = profile_repo.get_user_profile_by_id(
+            parent = self.profile_repo.get_user_profile_by_id(
                 profile.parent_profile_id
             )
 
@@ -62,21 +68,21 @@ class UserProfileServiceV0:
             "You cannot access this profile"
         )
         
-    @staticmethod
     def get_family_members(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> list[UserProfile]:
 
-        profile = UserProfileServiceV0.get_user_profile(
+        profile = self.get_user_profile(
             current_user_id,
             target_profile_id
         )
 
         return profile.family_members
 
-    @staticmethod
     def create_user_profile(
+        self,
         current_user_id: int,
         first_name: str,
         last_name: str,
@@ -89,7 +95,7 @@ class UserProfileServiceV0:
         if not last_name.strip():
             raise ValueError("Last name is required")
 
-        parent_profile = profile_repo.get_user_profile_by_user_id(
+        parent_profile = self.profile_repo.get_user_profile_by_user_id(
             current_user_id
         )
 
@@ -97,7 +103,7 @@ class UserProfileServiceV0:
             raise ValueError("Parent profile not found")
 
         profile = UserProfile(
-            profile_id=profile_repo.count_user_profiles() + 1,
+            profile_id=self.profile_repo.count_user_profiles() + 1,
             userId=None,
             first_name=first_name.strip(),
             last_name=last_name.strip(),
@@ -109,28 +115,28 @@ class UserProfileServiceV0:
             parent_profile_id=parent_profile.profile_id
         )
 
-        created_profile = profile_repo.create_user_profile(
+        created_profile = self.profile_repo.create_user_profile(
             profile
         )
 
-        return profile_repo.add_family_member(
+        return self.profile_repo.add_family_member(
             parent_profile.profile_id,
             created_profile
         )
 
-    @staticmethod
     def update_user_profile(
+        self,
         current_user_id: int,
         target_profile_id: int,
         payload: UpdateProfileRequest
     ) -> UserProfile:
 
-        UserProfileServiceV0._validate_profile_access(
+        self._validate_profile_access(
             current_user_id,
             target_profile_id
         )
 
-        profile = profile_repo.get_user_profile_by_id(target_profile_id)
+        profile = self.profile_repo.get_user_profile_by_id(target_profile_id)
 
         if not profile:
             raise ValueError("UserProfile not found")
@@ -159,20 +165,20 @@ class UserProfileServiceV0:
         if payload.last_name is not None and not updated_last_name:
             raise ValueError("Last name cannot be empty")
 
-        return profile_repo.update_user_profile(
+        return self.profile_repo.update_user_profile(
             profile_id=target_profile_id,
             first_name=updated_first_name,
             last_name=updated_last_name,
             avatar=updated_avatar
         )
         
-    @staticmethod
     def delete_user_profile(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> bool:
 
-        profile = profile_repo.get_user_profile_by_id(
+        profile = self.profile_repo.get_user_profile_by_id(
             target_profile_id
         )
 
@@ -185,7 +191,7 @@ class UserProfileServiceV0:
                 "You can only delete family members"
             )
 
-        parent = profile_repo.get_user_profile_by_id(
+        parent = self.profile_repo.get_user_profile_by_id(
             profile.parent_profile_id
         )
 
@@ -197,7 +203,7 @@ class UserProfileServiceV0:
                 "You can only delete your own family members"
             )
 
-        return profile_repo.delete_user_profile(
+        return self.profile_repo.delete_user_profile(
             target_profile_id
         )
         
@@ -205,63 +211,63 @@ class UserProfileServiceV0:
     # HEALTH GOALS
     # =========================
 
-    @staticmethod
     def get_health_goals(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> list[HealthGoal]:
 
-        profile = UserProfileServiceV0.get_user_profile(
+        profile = self.get_user_profile(
             current_user_id,
             target_profile_id
         )
 
         return profile.health_goals
 
-    @staticmethod
     def add_health_goal(
+        self,
         current_user_id: int,
         target_profile_id: int,
         health_goal_id: int
     ) -> UserProfile:
 
-        UserProfileServiceV0._validate_profile_access(
+        self._validate_profile_access(
             current_user_id,
             target_profile_id
         )
 
-        goal = HealthGoalServiceV0.get_health_goal_by_id(
+        goal = health_goal_service.get_health_goal_by_id(
             health_goal_id
         )
 
         if not goal:
             raise ValueError("Health goal not found")
 
-        return profile_repo.add_health_goal(
+        return self.profile_repo.add_health_goal(
             target_profile_id,
             goal
         )
 
-    @staticmethod
     def delete_health_goal(
+        self,
         current_user_id: int,
         target_profile_id: int,
         health_goal_id: int
     ) -> UserProfile:
 
-        UserProfileServiceV0._validate_profile_access(
+        self._validate_profile_access(
             current_user_id,
             target_profile_id
         )
 
-        goal = HealthGoalServiceV0.get_health_goal_by_id(
+        goal = health_goal_service.get_health_goal_by_id(
             health_goal_id
         )
 
         if not goal:
             raise ValueError("Health goal not found")
 
-        return profile_repo.delete_health_goal(
+        return self.profile_repo.delete_health_goal(
             target_profile_id,
             health_goal_id
         )
@@ -270,63 +276,63 @@ class UserProfileServiceV0:
     # DISEASES
     # =========================
 
-    @staticmethod
     def get_diseases(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> list[Disease]:
 
-        profile = UserProfileServiceV0.get_user_profile(
+        profile = self.get_user_profile(
             current_user_id,
             target_profile_id
         )
 
         return profile.diseases
 
-    @staticmethod
     def add_disease(
+        self,
         current_user_id: int,
         target_profile_id: int,
         disease_id: int
     ) -> UserProfile:
 
-        UserProfileServiceV0._validate_profile_access(
+        self._validate_profile_access(
             current_user_id,
             target_profile_id
         )
 
-        disease = DiseaseServiceV0.get_disease_by_id(
+        disease = disease_service.get_disease_by_id(
             disease_id
         )
 
         if not disease:
             raise ValueError("Disease not found")
 
-        return profile_repo.add_disease(
+        return self.profile_repo.add_disease(
             target_profile_id,
             disease
         )
 
-    @staticmethod
     def delete_disease(
+        self,
         current_user_id: int,
         target_profile_id: int,
         disease_id: int
     ) -> UserProfile:
 
-        UserProfileServiceV0._validate_profile_access(
+        self._validate_profile_access(
             current_user_id,
             target_profile_id
         )
 
-        disease = DiseaseServiceV0.get_disease_by_id(
+        disease = disease_service.get_disease_by_id(
             disease_id
         )
 
         if not disease:
             raise ValueError("Disease not found")
 
-        return profile_repo.delete_disease(
+        return self.profile_repo.delete_disease(
             target_profile_id,
             disease_id
         )
@@ -335,63 +341,63 @@ class UserProfileServiceV0:
     # ALLERGIES
     # =========================
 
-    @staticmethod
     def get_allergies(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> list[Allergy]:
 
-        profile = UserProfileServiceV0.get_user_profile(
+        profile = self.get_user_profile(
             current_user_id,
             target_profile_id
         )
 
         return profile.allergies
 
-    @staticmethod
     def add_allergy(
+        self,
         current_user_id: int,
         target_profile_id: int,
         allergy_id: int
     ) -> UserProfile:
 
-        UserProfileServiceV0._validate_profile_access(
+        self._validate_profile_access(
             current_user_id,
             target_profile_id
         )
 
-        allergy = AllergyServiceV0.get_allergy_by_id(
+        allergy = allergy_service.get_allergy_by_id(
             allergy_id
         )
 
         if not allergy:
             raise ValueError("Allergy not found")
 
-        return profile_repo.add_allergy(
+        return self.profile_repo.add_allergy(
             target_profile_id,
             allergy
         )
 
-    @staticmethod
     def delete_allergy(
+        self,
         current_user_id: int,
         target_profile_id: int,
         allergy_id: int
     ) -> UserProfile:
 
-        UserProfileServiceV0._validate_profile_access(
+        self._validate_profile_access(
             current_user_id,
             target_profile_id
         )
 
-        allergy = AllergyServiceV0.get_allergy_by_id(
+        allergy = allergy_service.get_allergy_by_id(
             allergy_id
         )
 
         if not allergy:
             raise ValueError("Allergy not found")
 
-        return profile_repo.delete_allergy(
+        return self.profile_repo.delete_allergy(
             target_profile_id,
             allergy_id
         )
@@ -400,13 +406,13 @@ class UserProfileServiceV0:
     # ACCESS CONTROL
     # =========================
 
-    @staticmethod
     def can_access_profile(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> bool:
 
-        profile = profile_repo.get_user_profile_by_id(
+        profile = self.profile_repo.get_user_profile_by_id(
             target_profile_id
         )
 
@@ -419,7 +425,7 @@ class UserProfileServiceV0:
 
         # parent
         if profile.parent_profile_id:
-            parent = profile_repo.get_user_profile_by_id(
+            parent = self.profile_repo.get_user_profile_by_id(
                 profile.parent_profile_id
             )
 
@@ -435,13 +441,13 @@ class UserProfileServiceV0:
 
         return False
 
-    @staticmethod
     def _validate_profile_access(
+        self,
         current_user_id: int,
         target_profile_id: int
     ) -> None:
 
-        if not UserProfileServiceV0.can_access_profile(
+        if not self.can_access_profile(
             current_user_id,
             target_profile_id
         ):

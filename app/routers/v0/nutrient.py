@@ -9,6 +9,8 @@ router = APIRouter(
     tags=["Nutrients V0"]
 )
 
+nutrient_service = NutrientServiceV0()
+
 
 @router.get("/")
 def list_nutrients():
@@ -33,7 +35,7 @@ def list_nutrients():
     - Không phụ thuộc database
     - Không phản ánh dữ liệu thực tế
     """
-    return NutrientServiceV0.get_all_nutrients()
+    return nutrient_service.get_all_nutrients()
 
 
 @router.get("/{id}")
@@ -61,7 +63,7 @@ def get_nutrient_by_id(id: int):
     **Lưu ý:**
     - v0 không truy vấn database thật
     """
-    nutrient = NutrientServiceV0.get_nutrient_by_id(id)
+    nutrient = nutrient_service.get_nutrient_by_id(id)
     if not nutrient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -95,7 +97,7 @@ def create_nutrient(name: str, description: str | None = None, image: str | None
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    return NutrientServiceV0.create_nutrient(name, description, image, effects, found_in)
+    return nutrient_service.create_nutrient(name, description, image, effects, found_in)
 
 
 @router.put("/{id}")
@@ -130,7 +132,7 @@ def update_nutrient(id: int, name: str, description: str | None = None, image: s
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    updated_nutrient = NutrientServiceV0.update_nutrient(id, name, description, image, effects, found_in)
+    updated_nutrient = nutrient_service.update_nutrient(id, name, description, image, effects, found_in)
     if not updated_nutrient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -160,7 +162,7 @@ def delete_nutrient(id: int):
     - v0 không xóa dữ liệu trong database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    result = NutrientServiceV0.delete_nutrient(id)
+    result = nutrient_service.delete_nutrient(id)
     if "message" not in result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

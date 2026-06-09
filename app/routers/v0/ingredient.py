@@ -8,6 +8,8 @@ router = APIRouter(
     tags=["Ingredients V0"]
 )
 
+ingredient_service = IngredientServiceV0()
+
 
 @router.get("/")
 def list_ingredients():
@@ -32,7 +34,7 @@ def list_ingredients():
     - Không phụ thuộc database
     - Không phản ánh dữ liệu thực tế
     """
-    return IngredientServiceV0.get_all_ingredients()
+    return ingredient_service.get_all_ingredients()
 
 
 @router.get("/{id}")
@@ -60,7 +62,7 @@ def get_ingredient_by_id(id: int):
     **Lưu ý:**
     - v0 không truy vấn database thật
     """
-    ingredient = IngredientServiceV0.get_ingredient_by_id(id)
+    ingredient = ingredient_service.get_ingredient_by_id(id)
     if not ingredient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -94,7 +96,7 @@ def create_ingredient(name: str, description: str | None = None, image: str | No
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    return IngredientServiceV0.create_ingredient(name, description, image, effects, found_in)
+    return ingredient_service.create_ingredient(name, description, image, effects, found_in)
 
 
 @router.put("/{id}")
@@ -129,7 +131,7 @@ def update_ingredient(id: int, name: str, description: str | None = None, image:
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    updated_ingredient = IngredientServiceV0.update_ingredient(id, name, description, image, effects, found_in)
+    updated_ingredient = ingredient_service.update_ingredient(id, name, description, image, effects, found_in)
     if not updated_ingredient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -159,10 +161,12 @@ def delete_ingredient(id: int):
     - v0 không xóa dữ liệu trong database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    result = IngredientServiceV0.delete_ingredient(id)
-    if "message" not in result:
+    result = ingredient_service.delete_ingredient(id)
+
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Ingredient with ID {id} not found"
         )
+
     return result

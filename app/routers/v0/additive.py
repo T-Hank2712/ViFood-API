@@ -8,6 +8,8 @@ router = APIRouter(
     tags=["Additives V0"]
 )
 
+additive_service = AdditiveServiceV0()
+
 
 @router.get("/")
 def list_additives():
@@ -33,7 +35,7 @@ def list_additives():
     - Không phụ thuộc database
     - Không phản ánh dữ liệu thực tế
     """
-    return AdditiveServiceV0.get_all_additives()
+    return additive_service.get_all_additives()
 
 
 @router.get("/{id}")
@@ -62,7 +64,7 @@ def get_additive_by_id(id: int):
     **Lưu ý:**
     - v0 không truy vấn database thật
     """
-    additive = AdditiveServiceV0.get_additive_by_id(id)
+    additive = additive_service.get_additive_by_id(id)
     if not additive:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -97,7 +99,7 @@ def create_additive(name: str, description: str | None = None, code: str | None 
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    return AdditiveServiceV0.create_additive(name, description, code, image, effects, found_in)
+    return additive_service.create_additive(name, description, code, image, effects, found_in)
 
 
 @router.put("/{id}")
@@ -134,7 +136,7 @@ def update_additive(id: int, name: str, description: str | None = None, code: st
     - v0 không lưu dữ liệu vào database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    updated_additive = AdditiveServiceV0.update_additive(id, name, description, code, image, effects, found_in)
+    updated_additive = additive_service.update_additive(id, name, description, code, image, effects, found_in)
     if not updated_additive:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -164,10 +166,12 @@ def delete_additive(id: int):
     - v0 không xóa dữ liệu trong database thật
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm thời của ứng dụng
     """
-    result = AdditiveServiceV0.delete_additive(id)
-    if "message" not in result:
+    result = additive_service.delete_additive(id)
+
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Additive with ID {id} not found"
         )
-    return result
+
+    return {"message": "Additive deleted successfully"}

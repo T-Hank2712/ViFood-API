@@ -6,6 +6,8 @@ router = APIRouter(
     tags=["Allergies V0"]
 )
 
+allergy_service = AllergyServiceV0()
+
 
 @router.get("/")
 def list_allergies():
@@ -26,7 +28,7 @@ def list_allergies():
     - Không phụ thuộc database
     - Không phản ánh dữ liệu thực tế
     """
-    return AllergyServiceV0.get_all_allergies()
+    return allergy_service.get_all_allergies()
 
 
 @router.get("/{id}")
@@ -50,7 +52,7 @@ def get_allergy_by_id(id: int):
     **Lưu ý:**
     - v0 không truy vấn database thật
     """
-    allergy = AllergyServiceV0.get_allergy_by_id(id)
+    allergy = allergy_service.get_allergy_by_id(id)
     if not allergy:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -78,7 +80,7 @@ def create_allergy(name: str):
     - Dữ liệu không được lưu vĩnh viễn
     - Chỉ phục vụ demo/test
     """
-    return AllergyServiceV0.create_allergy(name)
+    return allergy_service.create_allergy(name)
 
 
 @router.put("/{id}")
@@ -101,7 +103,7 @@ def update_allergy(id: int, name: str):
     **Lưu ý:**
     - v0 chỉ cập nhật dữ liệu mock
     """
-    allergy = AllergyServiceV0.update_allergy(id, name)
+    allergy = allergy_service.update_allergy(id, name)
     if not allergy:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -127,10 +129,10 @@ def delete_allergy(id: int):
     **Lưu ý:**
     - v0 chỉ xóa dữ liệu trong bộ nhớ tạm
     """
-    allergy = AllergyServiceV0.get_allergy_by_id(id)
+    allergy = allergy_service.get_allergy_by_id(id)
     if not allergy:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Allergy with ID {id} not found"
         )
-    return AllergyServiceV0.delete_allergy(id)
+    return allergy_service.delete_allergy(id)

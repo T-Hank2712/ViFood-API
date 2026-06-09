@@ -6,6 +6,8 @@ router = APIRouter(
     tags=["Diseases V0"]
 )
 
+disease_service = DiseaseServiceV0()
+
 
 @router.get("/")
 def list_diseases():
@@ -28,7 +30,7 @@ def list_diseases():
     - Không phụ thuộc database
     - Không phản ánh dữ liệu thực tế
     """
-    return DiseaseServiceV0.get_all()
+    return disease_service.get_all_diseases()
 
 
 @router.get("/{id}")
@@ -52,7 +54,7 @@ def get_disease_by_id(id: int):
     **Lưu ý:**
     - v0 không truy vấn database thật
     """
-    disease = DiseaseServiceV0.get_disease_by_id(id)
+    disease = disease_service.get_disease_by_id(id)
 
     if not disease:
         raise HTTPException(
@@ -82,7 +84,7 @@ def create_disease(name: str):
     - Dữ liệu không được lưu vĩnh viễn
     - Chỉ phục vụ demo/test
     """
-    return DiseaseServiceV0.create_disease(name)
+    return disease_service.create_disease(name)
 
 
 @router.put("/{id}")
@@ -105,7 +107,7 @@ def update_disease(id: int, name: str):
     **Lưu ý:**
     - v0 chỉ cập nhật dữ liệu mock
     """
-    updated_disease = DiseaseServiceV0.update_disease(id, name)
+    updated_disease = disease_service.update_disease(id, name)
 
     if not updated_disease:
         raise HTTPException(
@@ -134,7 +136,7 @@ def delete_disease(id: int):
     **Lưu ý:**
     - v0 chỉ xóa dữ liệu trong bộ nhớ tạm
     """
-    result = DiseaseServiceV0.delete_disease(id)
+    result = disease_service.delete_disease(id)
 
     if not result:
         raise HTTPException(

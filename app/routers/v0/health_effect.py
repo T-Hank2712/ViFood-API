@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, status
-from app.services.health_effect_service import HealthEffectServiceV0
+from app.services.v0.health_effect_service import HealthEffectServiceV0
 
 router = APIRouter(
     prefix="/health-effects",
     tags=["Health Effects V0"])
+
+health_effect_service = HealthEffectServiceV0()
 
 
 @router.get("/")
@@ -24,7 +26,7 @@ def list_health_effects():
     - Không lưu trữ lâu dài
     - Phục vụ testing/demo
     """
-    return HealthEffectServiceV0.get_all_health_effects()
+    return health_effect_service.get_all_health_effects()
 
 
 @router.get("/{id}")
@@ -43,7 +45,7 @@ def get_health_effect_by_id(id: int):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 không truy vấn database thật
     """
-    health_effect = HealthEffectServiceV0.get_health_effect_by_id(id)
+    health_effect = health_effect_service.get_health_effect_by_id(id)
     if not health_effect:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Health Effect not found")
     return health_effect
@@ -64,7 +66,7 @@ def create_health_effect(title: str):
     **Lưu ý:**
     - v0 không lưu trữ lâu dài, chỉ phục vụ testing/demo
     """
-    new_health_effect = HealthEffectServiceV0.create_health_effect(title)
+    new_health_effect = health_effect_service.create_health_effect(title)
     return new_health_effect
 
 
@@ -85,7 +87,7 @@ def update_health_effect(id: int, title: str):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 không lưu trữ lâu dài, chỉ phục vụ testing/demo
     """
-    updated_health_effect = HealthEffectServiceV0.update_health_effect(id, title)
+    updated_health_effect = health_effect_service.update_health_effect(id, title)
     if not updated_health_effect:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Health Effect not found")
     return updated_health_effect
@@ -106,5 +108,5 @@ def delete_health_effect(id: int):
     - v0 không lưu trữ lâu dài, chỉ phục vụ testing/demo
     - Nếu không tìm thấy, trả về thông báo lỗi
     """
-    result = HealthEffectServiceV0.delete_health_effect(id)
+    result = health_effect_service.delete_health_effect(id)
     return result

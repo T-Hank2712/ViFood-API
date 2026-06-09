@@ -7,12 +7,14 @@ from app.repositories.user_repo import UserRepository
 from app.repositories.profile_repo import UserProfileRepository
 from app.core.security import (hash_password, create_access_token, verify_password, verify_token, create_refresh_token)
 
+from app.db import db
+
 
 class AuthServiceV0:
 
     def __init__(self):
-        self.user_repo = UserRepository()
-        self.profile_repo = UserProfileRepository()
+        self.user_repo = UserRepository(db)
+        self.profile_repo = UserProfileRepository(db)
 
     def register_user(self, data):
         existing_user = self.user_repo.get_user_by_email(data.email)

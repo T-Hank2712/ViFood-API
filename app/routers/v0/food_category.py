@@ -5,6 +5,8 @@ router = APIRouter(
     prefix="/food-categories",
     tags=["Food Categories V0"])
 
+food_category_service = FoodCategoryServiceV0()
+
 
 @router.get("/")
 def list_food_categories():
@@ -24,7 +26,7 @@ def list_food_categories():
     - Không lưu trữ lâu dài
     - Phục vụ testing/demo
     """
-    return FoodCategoryServiceV0.get_all_food_categories()
+    return food_category_service.get_all_food_categories()
 
 
 @router.get("/{id}")
@@ -43,7 +45,7 @@ def get_food_category_by_id(id: int):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 không truy vấn database thật
     """
-    food_category = FoodCategoryServiceV0.get_food_category_by_id(id)
+    food_category = food_category_service.get_food_category_by_id(id)
     if not food_category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food Category not found")
     return food_category
@@ -64,7 +66,7 @@ def create_food_category(name: str):
     **Lưu ý:**
     - v0 không lưu trữ lâu dài, chỉ phục vụ testing/demo
     """
-    return FoodCategoryServiceV0.create_food_category(name)
+    return food_category_service.create_food_category(name)
 
 
 @router.put("/{id}")
@@ -84,7 +86,7 @@ def update_food_category(id: int, name: str):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 không truy vấn database thật
     """
-    updated_food_category = FoodCategoryServiceV0.update_food_category(id, name)
+    updated_food_category = food_category_service.update_food_category(id, name)
     if not updated_food_category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food Category not found")
     return updated_food_category
@@ -105,7 +107,7 @@ def delete_food_category(id: int):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 không truy vấn database thật, chỉ phục vụ testing/demo
     """
-    food_category = FoodCategoryServiceV0.get_food_category_by_id(id)
+    food_category = food_category_service.get_food_category_by_id(id)
     if not food_category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food Category not found")
-    return FoodCategoryServiceV0.delete_food_category(id)
+    return food_category_service.delete_food_category(id)

@@ -6,6 +6,8 @@ router = APIRouter(
     tags=["Health Goals V0"]
 )
 
+health_goal_service = HealthGoalServiceV0()
+
 
 @router.get("/")
 def list_health_goals():
@@ -25,7 +27,7 @@ def list_health_goals():
     - Không lưu trữ lâu dài
     - Phục vụ testing/demo
     """
-    return HealthGoalServiceV0.get_all_health_goals()
+    return health_goal_service.get_all_health_goals()
 
 
 @router.get("/{id}")
@@ -45,7 +47,7 @@ def get_health_goal_by_id(id: int):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 không truy vấn database thật
     """
-    health_goal = HealthGoalServiceV0.get_health_goal_by_id(id)
+    health_goal = health_goal_service.get_health_goal_by_id(id)
     return health_goal or {"error": "Health Goal not found"}
 
 
@@ -66,7 +68,7 @@ def create_health_goal(name: str):
     - Dữ liệu chỉ tồn tại trong bộ nhớ tạm (mock)
     - Không lưu vĩnh viễn
     """
-    new_health_goal = HealthGoalServiceV0.create_health_goal(name)
+    new_health_goal = health_goal_service.create_health_goal(name)
     return new_health_goal
 
 
@@ -88,7 +90,7 @@ def update_health_goal(id: int, name: str):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 chỉ cập nhật dữ liệu mock
     """
-    updated_health_goal = HealthGoalServiceV0.update_health_goal(id, name)
+    updated_health_goal = health_goal_service.update_health_goal(id, name)
     return updated_health_goal or {"error": "Health Goal not found"}
 
 
@@ -108,5 +110,5 @@ def delete_health_goal(id: int):
     - Nếu không tìm thấy, trả về thông báo lỗi
     - v0 chỉ xóa dữ liệu trong bộ nhớ tạm
     """
-    result = HealthGoalServiceV0.delete_health_goal(id)
+    result = health_goal_service.delete_health_goal(id)
     return result or {"error": "Health Goal not found"}

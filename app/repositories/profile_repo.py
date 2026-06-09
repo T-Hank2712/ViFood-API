@@ -4,43 +4,19 @@ from app.models.disease import Disease
 from app.models.allergy import Allergy
 
 
-# =========================
-# FAKE DATABASE
-# =========================
-
-fake_user_profiles_db: list[UserProfile] = [
-    UserProfile(
-        profile_id=1,
-        user_id=1,
-        first_name="Thành",
-        last_name="Lâm",
-        avatar="https://example.com/avatar.jpg",
-        health_goals=[
-            HealthGoal(id=1, name="Giảm cân"),
-        ],
-        diseases=[
-            Disease(id=1, name="Tiểu đường"),
-        ],
-        allergies=[
-            Allergy(id=1, name="Gluten"),
-        ],
-        family_members=[],
-        parent_profile_id=None
-    ),
-]
-
-
 class UserProfileRepository:
+    def __init__(self, db):
+        self.db = db
 
     # =========================
     # BASIC
     # =========================
 
     def get_all_user_profiles(self) -> list[UserProfile]:
-        return fake_user_profiles_db
+        return self.db.user_profiles
 
     def count_user_profiles(self) -> int:
-        return len(fake_user_profiles_db)
+        return len(self.db.user_profiles)
 
     def get_user_profile_by_id(
         self,
@@ -50,7 +26,7 @@ class UserProfileRepository:
         return next(
             (
                 profile
-                for profile in fake_user_profiles_db
+                for profile in self.db.user_profiles
                 if profile.profile_id == profile_id
             ),
             None
@@ -64,7 +40,7 @@ class UserProfileRepository:
         return next(
             (
                 profile
-                for profile in fake_user_profiles_db
+                for profile in self.db.user_profiles
                 if profile.userId == user_id
             ),
             None
@@ -75,7 +51,7 @@ class UserProfileRepository:
         profile: UserProfile
     ) -> UserProfile:
 
-        fake_user_profiles_db.append(profile)
+        self.db.user_profiles.append(profile)
 
         return profile
 
@@ -121,7 +97,7 @@ class UserProfileRepository:
                     if member.profile_id != profile_id
                 ]
 
-        fake_user_profiles_db.remove(profile)
+        self.db.user_profiles.remove(profile)
         
         return parent.family_members if parent else []
 
@@ -147,7 +123,7 @@ class UserProfileRepository:
                 ]
 
         # Xóa profile khỏi database
-        fake_user_profiles_db.remove(member)
+        self.db.user_profiles.remove(member)
 
         return True
 

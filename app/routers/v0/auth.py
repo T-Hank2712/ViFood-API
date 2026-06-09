@@ -4,13 +4,15 @@ from app.repositories.profile_repo import UserProfileRepository
 from app.schemas.auth import (RegisterRequest, LoginRequest)
 from app.services.v0.auth_service import AuthServiceV0
 
+from app.db import db
+
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"]
 )
 
 auth_service = AuthServiceV0()
-profile_repo = UserProfileRepository()
+profile_repo = UserProfileRepository(db)
 
 
 @router.post("/register")
