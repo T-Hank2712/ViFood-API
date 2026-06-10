@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     neo4j_uri: str
     neo4j_username: str
     neo4j_password: str
+    neo4j_database: str
     
     # ==================== Server Settings ====================
     host: str = "0.0.0.0"

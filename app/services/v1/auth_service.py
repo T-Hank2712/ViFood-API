@@ -1,54 +1,38 @@
-from datetime import datetime
 from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.models.user_profile import UserProfile
 from app.repositories.user_repo import UserRepository
-from app.repositories.profile_repo import UserProfileRepository
 from app.core.security import (hash_password, create_access_token, verify_password, verify_token, create_refresh_token)
 
-from app.db import db
 
+class AuthServiceV1:
 
-class AuthServiceV0:
-    def __init__(self):
+    def __init__(self, db):
         self.user_repo = UserRepository(db)
-        self.profile_repo = UserProfileRepository(db)
 
     def register_user(self, data):
         existing_user = self.user_repo.get_user_by_email(data.email)
 
         if existing_user:
-            raise ValueError("Email already exists")
+            raise HTTPException(
+                status_code=409,
+                detail="Email already exists"
+            )
 
         profile = UserProfile(
-            profile_id=self.profile_repo.count_user_profiles() + 1,
-            userId=None,
             first_name=data.first_name,
             last_name=data.last_name,
-            avatar=None,
-            health_goals=[],
-            diseases=[],
-            allergies=[],
-            family_members=[],
-            parent_profile_id=None
+            avatar=None
         )
 
         user = User(
-            id=self.user_repo.count_users() + 1,
             email=data.email,
             password_hash=hash_password(data.password),
-            is_active=True,
-            created_at=datetime.utcnow().isoformat(),
-            updated_at=datetime.utcnow().isoformat(),
-            profile_id=profile.profile_id
+            is_active=True
         )
 
-        created_profile = self.profile_repo.create_user_profile(profile)
-
-        created_user = self.user_repo.create_user(user)
-
-        created_profile.userId = created_user.id
+        created_user = self.user_repo.create_user(user, profile)
 
         return created_user
 
@@ -72,7 +56,7 @@ class AuthServiceV0:
         payload = {
             "user_id": user.id,
             "email": user.email,
-            "profile_id": user.profile_id,
+            "type": "access"
         }
 
         access_token = create_access_token(payload)
@@ -110,3 +94,11 @@ class AuthServiceV0:
             "access_token": new_access_token,
             "token_type": "bearer"
         }
+
+    def get_current_user(self, user_id: str):
+        user = self.user_repo.get_current_user(user_id)
+
+        if not user:
+            return None
+
+        return user

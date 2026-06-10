@@ -11,11 +11,15 @@ class Neo4jConnection:
         self.uri = os.getenv("NEO4J_URI")
         self.username = os.getenv("NEO4J_USERNAME")
         self.password = os.getenv("NEO4J_PASSWORD")
+        self.database = os.getenv("NEO4J_DATABASE")
 
         self.driver = GraphDatabase.driver(
             self.uri,
             auth=(self.username, self.password)
         )
+
+    def get_driver(self):
+        return self.driver
 
     def close(self):
         self.driver.close()

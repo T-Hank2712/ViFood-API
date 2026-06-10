@@ -1,153 +1,134 @@
-# from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
-# from app.repositories.user_repo import UserRepository
-# from app.repositories.profile_repo import UserProfileRepository
+from app.repositories.profile_repo import UserProfileRepository
 
-# from app.services.v0.auth_service import AuthServiceV0
-# from app.services.v0.user_profile_service import (
-#     UserProfileServiceV0
-# )
+from app.services.v1.profile_service_v1 import (
+    UserProfileServiceV1
+)
 
-# from app.schemas.update_profile import UpdateProfileRequest
+from app.schemas.update_profile import UpdateProfileRequest
 
-# from app.db import db
+from app.core.database import neo4j_db
 
-# from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user
 
-# router = APIRouter(
-#     prefix="/user-profiles",
-#     tags=["User Profile v0"]
-# )
+router = APIRouter(
+    prefix="/user-profiles",
+    tags=["User Profile v1"]
+)
 
-# profile_service = UserProfileServiceV0()
-# user_service = AuthServiceV0()
-# # user_repo = UserRepository(db)
-# profile_repo = UserProfileRepository(db)
+profile_service = UserProfileServiceV1(neo4j_db)
+profile_repo = UserProfileRepository(neo4j_db)
 
 
-# # =========================
-# # BASIC
-# # =========================
+# =========================
+# BASIC
+# =========================
 
-# @router.get(
-#     "/",
-#     summary="Lấy toàn bộ hồ sơ người dùng"
-# )
-# async def get_all_user_profiles():
-
-#     profiles = profile_service.get_all_user_profiles()
-
-#     return {
-#         "message": "Get all user profiles success",
-#         "data": profiles
-#     }
-
-
-# @router.get(
-#     "/{profile_id:int}",
-#     summary="Lấy thông tin hồ sơ người dùng"
-# )
-# async def get_user_profile(
-#     profile_id: int,
-#     current_user=Depends(get_current_user)
-# ):
-
-#     try:
-#         profile = profile_service.get_user_profile(
-#             current_user_id=current_user["user_id"],
-#             target_profile_id=profile_id
-#         )
-
-#         return {
-#             "message": "Get user profile success",
-#             "data": profile
-#         }
-
-#     except ValueError as e:
-
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail=str(e)
-#         )
-
-#     except PermissionError as e:
-
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail=str(e)
-#         )
-        
     
-# @router.get(
-#     "/{profile_id}/family-members",
-#     summary="Lấy danh sách thành viên gia đình"
-# )
-# async def get_family_members(
-#     profile_id: int,
-#     current_user=Depends(get_current_user)
-# ):
+@router.get(
+    "/family-members",
+    summary="Lấy danh sách thành viên gia đình"
+)
+async def get_family_members(
+    current_user=Depends(get_current_user)
+):
 
-#     try:
-#         family_members = profile_service.get_family_members(
-#             current_user_id=current_user["user_id"],
-#             target_profile_id=profile_id
-#         )
+    try:
+        family_members = profile_service.get_family_members(
+            current_user_id=current_user["user_id"]
+        )
 
-#         return {
-#             "message": "Get family members success",
-#             "data": family_members
-#         }
+        return {
+            "message": "Get family members success",
+            "data": family_members
+        }
 
-#     except PermissionError as e:
+    except PermissionError as e:
 
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail=str(e)
-#         )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
 
-#     except ValueError as e:
+    except ValueError as e:
 
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail=str(e)
-#         )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
 
 
-# @router.post(
-#     "/family-members",
-#     summary="Tạo hồ sơ người dùng"
-# )
-# async def create_user_profile(
-#     payload: UpdateProfileRequest,
-#     current_user=Depends(get_current_user)
-# ):
+@router.get(
+    "/family-members/{profile_id}",
+    summary="Lấy chi tiết thành viên gia đình"
+)
+async def get_family_member_detail(
+    profile_id: str,
+    current_user=Depends(get_current_user)
+):
 
-#     try:
-#         profile = profile_service.create_user_profile(
-#             current_user_id=current_user["user_id"],
-#             first_name=payload.first_name,
-#             last_name=payload.last_name,
-#             avatar=payload.avatar
-#         )
+    try:
+        profile = profile_service.get_profile_by_profile_id(
+            current_user_id=current_user["user_id"],
+            profile_id=profile_id
+        )
 
-#         return {
-#             "message": "Create user profile success",
-#             "data": profile
-#         }
+        return {
+            "message": "Get profile success",
+            "data": profile
+        }
 
-#     except ValueError as e:
+    except PermissionError as e:
 
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=str(e)
-#         )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
 
-#     except PermissionError as e:
+    except ValueError as e:
 
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail=str(e)
-#         )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.post(
+    "/family-members",
+    summary="Tạo hồ sơ người dùng"
+)
+async def create_user_profile(
+    payload: UpdateProfileRequest,
+    current_user=Depends(get_current_user)
+):
+
+    try:
+        profile = profile_service.create_user_profile(
+            current_user_id=current_user["user_id"],
+            first_name=payload.first_name,
+            last_name=payload.last_name,
+            avatar=payload.avatar
+        )
+
+        return {
+            "message": "Create user profile success",
+            "data": profile
+        }
+
+    except ValueError as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    except PermissionError as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
 
 
 # @router.patch(
@@ -556,40 +537,3 @@
 #             status_code=status.HTTP_400_BAD_REQUEST,
 #             detail=str(e)
 #         )
-
-
-# # =========================
-# # CURRENT USER
-# # =========================
-
-# @router.get(
-#     "/me",
-#     summary="Lấy thông tin người dùng hiện tại"
-# )
-# async def me(
-#     current_user=Depends(get_current_user)
-# ):
-
-#     user_id = current_user["user_id"]
-
-#     user = user_repo.get_user_by_id(
-#         user_id
-#     )
-
-#     if not user:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="User not found"
-#         )
-
-#     profile = profile_repo.get_user_profile_by_id(
-#         user.profile_id
-#     )
-
-#     return {
-#         "message": "Get current user success",
-#         "data": {
-#             "user": user,
-#             "profile": profile
-#         }
-#     }

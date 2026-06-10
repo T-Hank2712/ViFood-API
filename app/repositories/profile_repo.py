@@ -2,130 +2,187 @@ from app.models.user_profile import UserProfile
 from app.models.health_goal import HealthGoal
 from app.models.disease import Disease
 from app.models.allergy import Allergy
+from app.repositories.base_repo import BaseRepository
+from app.helpers.convert_time import to_vn_time
 
 
-class UserProfileRepository:
+class UserProfileRepository(BaseRepository):
+    
     def __init__(self, db):
-        self.db = db
+        super().__init__(db)
 
     # =========================
     # BASIC
     # =========================
+    
+    def _map_profile(self, record) -> UserProfile:
+        p = record["p"]
 
-    def get_all_user_profiles(self) -> list[UserProfile]:
-        return self.db.user_profiles
-
-    def count_user_profiles(self) -> int:
-        return len(self.db.user_profiles)
-
-    def get_user_profile_by_id(
-        self,
-        profile_id: int
-    ) -> UserProfile | None:
-
-        return next(
-            (
-                profile
-                for profile in self.db.user_profiles
-                if profile.profile_id == profile_id
-            ),
-            None
+        return UserProfile(
+            profile_id=p.get("id"),
+            first_name=p.get("firstName"),
+            last_name=p.get("lastName"),
+            avatar=p.get("avatar"),
+            created_at=to_vn_time(p.get("createdAt")),
+            updated_at=to_vn_time(p.get("updatedAt")),
         )
         
-    def get_user_profile_by_user_id(
-        self,
-        user_id: int
-    ) -> UserProfile | None:
-
-        return next(
-            (
-                profile
-                for profile in self.db.user_profiles
-                if profile.userId == user_id
-            ),
-            None
-        )
-
-    def create_user_profile(
-        self,
-        profile: UserProfile
-    ) -> UserProfile:
-
-        self.db.user_profiles.append(profile)
-
-        return profile
-
-    def update_user_profile(
-        self,
-        profile_id: int,
-        first_name: str,
-        last_name: str,
-        avatar: str | None = None
-    ) -> UserProfile | None:
-
-        profile = self.get_user_profile_by_id(profile_id)
-
-        if profile is None:
-            return None
-
-        profile.first_name = first_name
-        profile.last_name = last_name
-
-        if avatar is not None:
-            profile.avatar = avatar
-
-        return profile
-
-    def delete_user_profile(
-        self,
-        profile_id: int
-    ) -> UserProfile:
-
-        profile = self.get_user_profile_by_id(profile_id)
-
-        if profile is None:
-            return False
-
-        # Nếu là family member thì remove khỏi parent
-        if profile.parent_profile_id is not None:
-            parent = self.get_user_profile_by_id(profile.parent_profile_id)
-
-            if parent is not None:
-                parent.family_members = [
-                    member
-                    for member in parent.family_members
-                    if member.profile_id != profile_id
-                ]
-
-        self.db.user_profiles.remove(profile)
+    def _map_profile_with_relations(self, record):
+        p = record["p"]
+        return {
+            "profile_id": p.get("id"),
+            "first_name": p.get("firstName"),
+            "last_name": p.get("lastName"),
+            "avatar": p.get("avatar"),
+            "health_goals": p.get("health_goals", []),
+            "diseases": p.get("diseases", []),
+            "allergies": p.get("allergies", [])
+        }
         
-        return parent.family_members if parent else []
+    def create_profile(self, user_id: str, profile: UserProfile):
 
-    def delete_family_member_profile(
-        self,
-        member_profile_id: int
-    ) -> bool:
+        profile_data = self.prepare_entity({
+            "firstName": profile.first_name,
+            "lastName": profile.last_name,
+            "avatar": profile.avatar,
+        })
+        
+        def query(tx):
+            result = tx.run("""
+                MATCH (u:User {id: $user_id})
+                CREATE (p:Profile $profile)
+                CREATE (u)-[:HAS_FAMILY_MEMBER]->(p)
+                RETURN p
+            """, {
+                "user_id": user_id,
+                "profile": profile_data
+            }).single()
 
-        member = self.get_user_profile_by_id(member_profile_id)
+            if not result:
+                return None
 
-        if member is None:
-            return False
+            return self._map_profile(result)
 
-        # Tìm parent và remove khỏi danh sách family members
-        if member.parent_profile_id is not None:
-            parent = self.get_user_profile_by_id(member.parent_profile_id)
+        return self.write(query)
 
-            if parent is not None:
-                parent.family_members = [
-                    family_member
-                    for family_member in parent.family_members
-                    if family_member.profile_id != member_profile_id
-                ]
+    def get_user_profile_by_user_id(self, profile_id: str) -> UserProfile | None:
 
-        # Xóa profile khỏi database
-        self.db.user_profiles.remove(member)
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                RETURN p
+                LIMIT 1
+            """, {
+                "profile_id": profile_id
+            }).single()
 
-        return True
+            if not result:
+                return None
+
+            p = result["p"]
+
+            return UserProfile(
+                profile_id=p.get("id"),
+                first_name=p.get("firstName"),
+                last_name=p.get("lastName"),
+                avatar=p.get("avatar"),
+            )
+
+        return self.read(query)
+    
+    def get_profile_by_profile_id(self, user_id: str, profile_id: str) -> UserProfile:
+    
+        def query(tx):
+            result = tx.run("""
+                MATCH (u:User {id: $user_id})
+                MATCH (u)-[:HAS_PROFILE|HAS_FAMILY_MEMBER]->(p:Profile {id: $profile_id})
+                RETURN p
+                LIMIT 1
+            """, {
+                "user_id": user_id,
+                "profile_id": profile_id
+            })
+
+            record = result.single()
+
+            if not record:
+                return None
+
+            return self._map_profile(record)
+
+        return self.read(query)
+
+    # def update_user_profile(
+    #     self,
+    #     profile_id: int,
+    #     first_name: str,
+    #     last_name: str,
+    #     avatar: str | None = None
+    # ) -> UserProfile | None:
+
+    #     profile = self.get_user_profile_by_id(profile_id)
+
+    #     if profile is None:
+    #         return None
+
+    #     profile.first_name = first_name
+    #     profile.last_name = last_name
+
+    #     if avatar is not None:
+    #         profile.avatar = avatar
+
+    #     return profile
+
+    # def delete_user_profile(
+    #     self,
+    #     profile_id: int
+    # ) -> UserProfile:
+
+    #     profile = self.get_user_profile_by_id(profile_id)
+
+    #     if profile is None:
+    #         return False
+
+    #     # Nếu là family member thì remove khỏi parent
+    #     if profile.parent_profile_id is not None:
+    #         parent = self.get_user_profile_by_id(profile.parent_profile_id)
+
+    #         if parent is not None:
+    #             parent.family_members = [
+    #                 member
+    #                 for member in parent.family_members
+    #                 if member.profile_id != profile_id
+    #             ]
+
+    #     self.db.user_profiles.remove(profile)
+        
+    #     return parent.family_members if parent else []
+
+    # def delete_family_member_profile(
+    #     self,
+    #     member_profile_id: int
+    # ) -> bool:
+
+    #     member = self.get_user_profile_by_id(member_profile_id)
+
+    #     if member is None:
+    #         return False
+
+    #     # Tìm parent và remove khỏi danh sách family members
+    #     if member.parent_profile_id is not None:
+    #         parent = self.get_user_profile_by_id(member.parent_profile_id)
+
+    #         if parent is not None:
+    #             parent.family_members = [
+    #                 family_member
+    #                 for family_member in parent.family_members
+    #                 if family_member.profile_id != member_profile_id
+    #             ]
+
+    #     # Xóa profile khỏi database
+    #     self.db.user_profiles.remove(member)
+
+    #     return True
 
     # =========================
     # HEALTH GOALS
@@ -304,29 +361,20 @@ class UserProfileRepository:
     # =========================
     # FAMILY MEMBERS
     # =========================
+    
+    def get_family_members(self, user_id: str) -> list[UserProfile]:
+        
+        def query(tx):
+            result = tx.run("""
+                MATCH (u:User {id: $user_id})-[:HAS_FAMILY_MEMBER]->(p:Profile)
+                RETURN p
+            """, {
+                "user_id": user_id
+            })
 
-    def add_family_member(
-        self,
-        parent_profile_id: int,
-        member: UserProfile
-    ) -> UserProfile | None:
+            return [self._map_profile(r) for r in result]
 
-        parent = self.get_user_profile_by_id(parent_profile_id)
-
-        if parent is None:
-            return None
-
-        exists = any(
-            family_member.profile_id == member.profile_id
-            for family_member in parent.family_members
-        )
-
-        if exists:
-            return parent
-
-        parent.family_members.append(member)
-
-        return parent.family_members
+        return self.read(query)
 
     def remove_family_member(
         self,

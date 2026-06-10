@@ -20,7 +20,6 @@ allergy_service = AllergyServiceV0()
 
 
 class UserProfileServiceV0:
-    
     def __init__(self):
         self.profile_repo = UserProfileRepository(db)
 
