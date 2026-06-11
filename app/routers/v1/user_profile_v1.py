@@ -69,7 +69,7 @@ async def get_family_member_detail(
 ):
 
     try:
-        profile = profile_service.get_profile_by_profile_id(
+        profile = profile_service.get_accessible_profile(
             current_user_id=current_user["user_id"],
             profile_id=profile_id
         )
@@ -96,7 +96,7 @@ async def get_family_member_detail(
 
 @router.post(
     "/family-members",
-    summary="Tạo hồ sơ người dùng"
+    summary="Tạo hồ sơ thành viên gia đình"
 )
 async def create_user_profile(
     payload: UpdateProfileRequest,
@@ -130,74 +130,73 @@ async def create_user_profile(
             detail=str(e)
         )
 
+        
+@router.patch(
+    "/{profile_id}",
+    summary="Chỉnh sửa hồ sơ người dùng"
+)
+async def update_current_user_profile(
+    payload: UpdateProfileRequest,
+    profile_id: str,
+    current_user=Depends(get_current_user),
+):
+    try:
+        profile = profile_service.update_user_profile(
+            current_user_id=current_user["user_id"],
+            profile_id=profile_id,
+            profile=payload
+        )
 
-# @router.patch(
-#     "/{profile_id}",
-#     summary="Cập nhật một phần hồ sơ người dùng"
-# )
-# async def update_user_profile(
-#     profile_id: int,
-#     payload: UpdateProfileRequest,
-#     current_user=Depends(get_current_user)
-# ):
-#     try:
-#         profile = profile_service.update_user_profile(
-#             current_user_id=current_user["user_id"],
-#             target_profile_id=profile_id,
-#             payload=payload
-#         )
+        return {
+            "message": "Update user profile success",
+            "data": profile
+        }
 
-#         return {
-#             "message": "Update user profile success",
-#             "data": profile
-#         }
+    except ValueError as e:
 
-#     except PermissionError as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail=str(e)
-#         )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
-#     except ValueError as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail=str(e)
-#         )
+    except PermissionError as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
 
 
-# @router.delete(
-#     "/{profile_id}",
-#     summary="Xóa hồ sơ thành viên gia đình"
-# )
-# async def delete_user_profile(
-#     profile_id: int,
-#     current_user=Depends(get_current_user)
-# ):
+@router.delete(
+    "/{profile_id}",
+    summary="Xóa hồ sơ thành viên gia đình"
+)
+async def delete_user_profile(
+    profile_id: str,
+    current_user=Depends(get_current_user)
+):
 
-#     try:
-#         profile = profile_service.delete_user_profile(
-#             current_user_id=current_user["user_id"],
-#             target_profile_id=profile_id
-#         )
+    try:
+        profile_service.delete_family_meber(
+            current_user_id=current_user["user_id"],
+            target_profile_id=profile_id,
+        )
 
-#         return {
-#             "message": "Delete user profile success",
-#             "data": profile
-#         }
+        return {"message": "Delete user profile success"}
 
-#     except PermissionError as e:
+    except PermissionError as e:
 
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail=str(e)
-#         )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
 
-#     except ValueError as e:
+    except ValueError as e:
 
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail=str(e)
-#         )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
 
 
 # # =========================

@@ -25,3 +25,8 @@ class BaseRepository:
         data["updatedAt"] = now_iso()
 
         return data
+    
+    def prepare_update_entity(self, data: dict) -> dict:
+        data = dict(data)
+        data["updatedAt"] = now_iso()
+        return data

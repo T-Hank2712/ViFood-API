@@ -8,7 +8,6 @@ from app.models.health_effect import HealthEffect
 from app.models.food_category import FoodCategory
 from app.models.allergy import Allergy
 from app.models.disease import Disease
-from app.models.health_goal import HealthGoal
 # user and user_profile not required in seed data
 
 
@@ -236,11 +235,11 @@ def seed(db: FakeDB):
     # =========================
     # HEALTH GOALS
     # =========================
-    db.health_goals.extend([
-        HealthGoal(id=1, name="Giảm cân"),
-        HealthGoal(id=2, name="Tăng cơ"),
-        HealthGoal(id=3, name="Duy trì sức khỏe"),
-    ])
+    # db.health_goals.extend([
+    #     HealthGoal(id=1, name="Giảm cân"),
+    #     HealthGoal(id=2, name="Tăng cơ"),
+    #     HealthGoal(id=3, name="Duy trì sức khỏe"),
+    # ])
 
     # =========================
     # NUTRIENTS
