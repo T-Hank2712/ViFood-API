@@ -7,11 +7,16 @@ from app.helpers.convert_time import to_vn_time
 
 from app.schemas.update_profile import UpdateProfileRequest
 
+from app.repositories.health_goal_repo import HealthGoalRepository
+from app.repositories.disease_repo import DiseaseRepository
+
 
 class UserProfileRepository(BaseRepository):
     
     def __init__(self, db):
         super().__init__(db)
+        self.health_goal_repo = HealthGoalRepository(db)
+        self.disease_repo = DiseaseRepository(db)
 
     # =========================
     # BASIC
@@ -156,251 +161,221 @@ class UserProfileRepository(BaseRepository):
 
         return self.write(query)
 
-    # def update_user_profile(
-    #     self,
-    #     profile_id: int,
-    #     first_name: str,
-    #     last_name: str,
-    #     avatar: str | None = None
-    # ) -> UserProfile | None:
-
-    #     profile = self.get_user_profile_by_id(profile_id)
-
-    #     if profile is None:
-    #         return None
-
-    #     profile.first_name = first_name
-    #     profile.last_name = last_name
-
-    #     if avatar is not None:
-    #         profile.avatar = avatar
-
-    #     return profile
-
-    # def delete_user_profile(
-    #     self,
-    #     profile_id: int
-    # ) -> UserProfile:
-
-    #     profile = self.get_user_profile_by_id(profile_id)
-
-    #     if profile is None:
-    #         return False
-
-    #     # Nếu là family member thì remove khỏi parent
-    #     if profile.parent_profile_id is not None:
-    #         parent = self.get_user_profile_by_id(profile.parent_profile_id)
-
-    #         if parent is not None:
-    #             parent.family_members = [
-    #                 member
-    #                 for member in parent.family_members
-    #                 if member.profile_id != profile_id
-    #             ]
-
-    #     self.db.user_profiles.remove(profile)
-        
-    #     return parent.family_members if parent else []
-
-    # def delete_family_member_profile(
-    #     self,
-    #     member_profile_id: int
-    # ) -> bool:
-
-    #     member = self.get_user_profile_by_id(member_profile_id)
-
-    #     if member is None:
-    #         return False
-
-    #     # Tìm parent và remove khỏi danh sách family members
-    #     if member.parent_profile_id is not None:
-    #         parent = self.get_user_profile_by_id(member.parent_profile_id)
-
-    #         if parent is not None:
-    #             parent.family_members = [
-    #                 family_member
-    #                 for family_member in parent.family_members
-    #                 if family_member.profile_id != member_profile_id
-    #             ]
-
-    #     # Xóa profile khỏi database
-    #     self.db.user_profiles.remove(member)
-
-    #     return True
-
     # =========================
     # HEALTH GOALS
     # =========================
 
     def get_health_goals_by_profile_id(
         self,
-        profile_id: int
+        profile_id: str
     ) -> list[HealthGoal]:
 
-        profile = self.get_user_profile_by_id(profile_id)
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                    -[:HAS_HEALTH_GOAL]->(h:HealthGoal)
+                RETURN h
+            """, {
+                "profile_id": profile_id
+            })
 
-        if profile is None:
-            return []
+            return [
+                self.health_goal_repo._map_health_goal(record)
+                for record in result
+            ]
 
-        return profile.health_goals
+        return self.read(query)
 
-    def add_health_goal(
+    def add_health_goal_to_profile(
         self,
-        profile_id: int,
-        health_goal: HealthGoal
-    ) -> UserProfile | None:
+        profile_id: str,
+        health_goal_id: str
+    ) -> bool:
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                MATCH (h:HealthGoal {id: $health_goal_id})
 
-        profile = self.get_user_profile_by_id(profile_id)
+                MERGE (p)-[:HAS_HEALTH_GOAL]->(h)
 
-        if profile is None:
-            return None
+                RETURN COUNT(h) > 0 AS success
+            """, {
+                "profile_id": profile_id,
+                "health_goal_id": health_goal_id
+            })
 
-        exists = any(
-            goal.id == health_goal.id
-            for goal in profile.health_goals
-        )
+            record = result.single()
+            return record["success"] if record else False
 
-        if exists:
-            raise ValueError("Health goal already exists")
-
-        profile.health_goals.append(health_goal)
-
-        return profile.health_goals
-
-    def delete_health_goal(
+        return self.write(query)
+    
+    def remove_health_goal_from_profile(
         self,
-        profile_id: int,
-        health_goal_id: int
-    ) -> UserProfile | None:
+        profile_id: str,
+        health_goal_id: str
+    ) -> bool:
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                    -[r:HAS_HEALTH_GOAL]->
+                    (h:HealthGoal {id: $health_goal_id})
 
-        profile = self.get_user_profile_by_id(profile_id)
+                DELETE r
 
-        if profile is None:
-            return None
+                RETURN COUNT(r) > 0 AS success
+            """, {
+                "profile_id": profile_id,
+                "health_goal_id": health_goal_id
+            })
 
-        profile.health_goals = [
-            goal
-            for goal in profile.health_goals
-            if goal.id != health_goal_id
-        ]
+            record = result.single()
+            return record["success"] if record else False
 
-        return profile.health_goals
+        return self.write(query)
 
-    # =========================
-    # DISEASES
-    # =========================
+    # # =========================
+    # # DISEASES
+    # # =========================
 
     def get_diseases_by_profile_id(
         self,
-        profile_id: int
+        profile_id: str
     ) -> list[Disease]:
 
-        profile = self.get_user_profile_by_id(profile_id)
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                    -[:HAS_DISEASE]->(d:Disease)
+                RETURN d
+            """, {
+                "profile_id": profile_id
+            })
 
-        if profile is None:
-            return []
+            return [
+                self.disease_repo._map_disease(record)
+                for record in result
+            ]
 
-        return profile.diseases
+        return self.read(query)
 
-    def add_disease(
+    def add_disease_to_profile(
         self,
-        profile_id: int,
-        disease: Disease
-    ) -> UserProfile | None:
+        profile_id: str,
+        disease_id: str
+    ) -> bool:
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                MATCH (d:Disease {id: $disease_id})
 
-        profile = self.get_user_profile_by_id(profile_id)
+                MERGE (p)-[:HAS_DISEASE]->(d)
 
-        if profile is None:
-            return None
+                RETURN COUNT(d) > 0 AS success
+            """, {
+                "profile_id": profile_id,
+                "disease_id": disease_id
+            })
 
-        exists = any(
-            d.id == disease.id
-            for d in profile.diseases
-        )
+            record = result.single()
+            return record["success"] if record else False
 
-        if exists:
-            raise ValueError("Disease already exists")
+        return self.write(query)
 
-        profile.diseases.append(disease)
-
-        return profile.diseases
-
-    def delete_disease(
+    def remove_disease_from_profile(
         self,
-        profile_id: int,
-        disease_id: int
-    ) -> UserProfile | None:
+        profile_id: str,
+        disease_id: str
+    ) -> bool:
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                    -[r:HAS_DISEASE]->
+                    (d:Disease {id: $disease_id})
 
-        profile = self.get_user_profile_by_id(profile_id)
+                DELETE r
 
-        if profile is None:
-            return None
+                RETURN COUNT(r) > 0 AS success
+            """, {
+                "profile_id": profile_id,
+                "disease_id": disease_id
+            })
 
-        profile.diseases = [
-            disease
-            for disease in profile.diseases
-            if disease.id != disease_id
-        ]
+            record = result.single()
+            return record["success"] if record else False
 
-        return profile.diseases
+        return self.write(query)
 
-    # =========================
-    # ALLERGIES
-    # =========================
+    # # =========================
+    # # ALLERGIES
+    # # =========================
 
     def get_allergies_by_profile_id(
         self,
-        profile_id: int
+        profile_id: str
     ) -> list[Allergy]:
 
-        profile = self.get_user_profile_by_id(profile_id)
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                    -[:HAS_ALLERGY]->(a:Allergy)
+                RETURN a
+            """, {
+                "profile_id": profile_id
+            })
 
-        if profile is None:
-            return []
+            return [
+                self.allergy_repo._map_allergy(record)
+                for record in result
+            ]
 
-        return profile.allergies
+        return self.read(query)
 
-    def add_allergy(
+    def add_allergy_to_profile(
         self,
-        profile_id: int,
-        allergy: Allergy
-    ) -> UserProfile | None:
+        profile_id: str,
+        allergy_id: str
+    ) -> bool:
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                MATCH (a:Allergy {id: $allergy_id})
 
-        profile = self.get_user_profile_by_id(profile_id)
+                MERGE (p)-[:HAS_ALLERGY]->(a)
 
-        if profile is None:
-            return None
+                RETURN COUNT(a) > 0 AS success
+            """, {
+                "profile_id": profile_id,
+                "allergy_id": allergy_id
+            })
 
-        exists = any(
-            allergy_item.id == allergy.id
-            for allergy_item in profile.allergies
-        )
+            record = result.single()
+            return record["success"] if record else False
 
-        if exists:
-            raise ValueError("Allergy already exists")
+        return self.write(query)
 
-        profile.allergies.append(allergy)
-
-        return profile.allergies
-
-    def delete_allergy(
+    def remove_allergy_from_profile(
         self,
-        profile_id: int,
-        allergy_id: int
-    ) -> UserProfile | None:
+        profile_id: str,
+        allergy_id: str
+    ) -> bool:
+        def query(tx):
+            result = tx.run("""
+                MATCH (p:Profile {id: $profile_id})
+                    -[r:HAS_ALLERGY]->
+                    (a:Allergy {id: $allergy_id})
 
-        profile = self.get_user_profile_by_id(profile_id)
+                DELETE r
 
-        if profile is None:
-            return None
+                RETURN COUNT(r) > 0 AS success
+            """, {
+                "profile_id": profile_id,
+                "allergy_id": allergy_id
+            })
 
-        profile.allergies = [
-            allergy
-            for allergy in profile.allergies
-            if allergy.id != allergy_id
-        ]
+            record = result.single()
+            return record["success"] if record else False
 
-        return profile.allergies
+        return self.write(query)
 
     # =========================
     # FAMILY MEMBERS
