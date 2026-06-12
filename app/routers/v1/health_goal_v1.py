@@ -1,12 +1,13 @@
 
 from app.services.v1.health_goal_service_v1 import HealthGoalServiceV1
 from app.core.database import neo4j_db
-from app.schemas.profile_schema import HealthGoalRequest
+
+from app.schemas.profile_schema import HealthProfileRequest
 from fastapi import APIRouter, HTTPException, status
 
 router = APIRouter(
     prefix="/health-goals",
-    tags=["Health Goals V0"]
+    tags=["Health Goals V1"]
 )
 
 health_goal_service = HealthGoalServiceV1(neo4j_db)
@@ -48,10 +49,9 @@ def list_health_goals():
         health_goal = health_goal_service.get_all_health_goals()
 
         return {
-            "message": "Create Health Goal success",
-            "data": health_goal,
+            "message": "Get Health Goals success",
+            "data": health_goal
         }
-
     except PermissionError as e:
 
         raise HTTPException(
@@ -88,7 +88,7 @@ def get_health_goal_by_id(id: str):
         health_goal = health_goal_service.get_health_goal_by_id(id)
 
         return {
-                "message": "Create Health Goal success",
+                "message": "Get Health Goal success",
                 "data": health_goal,
         }
 
@@ -108,7 +108,7 @@ def get_health_goal_by_id(id: str):
 
 
 @router.post("/")
-def create_health_goal(payload: HealthGoalRequest):
+def create_health_goal(payload: HealthProfileRequest):
     """
     Tạo mới một mục tiêu sức khỏe.
 
@@ -147,7 +147,7 @@ def create_health_goal(payload: HealthGoalRequest):
 
 
 @router.patch("/{id}")
-def update_health_goal(id: str, payload: HealthGoalRequest):
+def update_health_goal(id: str, payload: HealthProfileRequest):
     """
     Cập nhật thông tin mục tiêu sức khỏe theo ID.
 
