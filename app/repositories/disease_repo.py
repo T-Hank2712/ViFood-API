@@ -1,6 +1,6 @@
 from app.models.disease import Disease
 from app.repositories.base_repo import BaseRepository
-from app.helpers.normalize import normalize_key
+from app.helpers.slug import generate_key
 
 
 class DiseaseRepository(BaseRepository):
@@ -42,7 +42,7 @@ class DiseaseRepository(BaseRepository):
 
     def _find_by_key(self, key: str):
 
-        _key = normalize_key(key)
+        _key = generate_key(key)
 
         def _query(tx):
             result = tx.run("""
@@ -58,7 +58,7 @@ class DiseaseRepository(BaseRepository):
 
     def create(self, disease: Disease):
 
-        key = normalize_key(disease.name)
+        key = generate_key(disease.name)
 
         disease_data = self.prepare_entity({
             "name": disease.name,
@@ -85,7 +85,7 @@ class DiseaseRepository(BaseRepository):
 
     def update(self, disease_id: str, name: str):
 
-        key = normalize_key(name)
+        key = generate_key(name)
 
         def _query(tx):
             result = tx.run("""

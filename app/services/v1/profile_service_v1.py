@@ -3,7 +3,8 @@ from app.models.user_profile import UserProfile
 
 # from app.services.v0.health_goal_service import HealthGoalServiceV0
 from app.services.v1.disease_service_v1 import DiseaseServiceV1
-from app.services.v0.allergy_service import AllergyServiceV0
+from app.services.v1.allergy_service_v1 import AllergyServiceV1
+from app.services.v1.health_goal_service_v1 import HealthGoalServiceV1
 
 from app.repositories.profile_repo import UserProfileRepository
 from app.repositories.user_repo import UserRepository
@@ -13,8 +14,8 @@ from app.core.database import neo4j_db
 
 # health_goal_service = HealthGoalServiceV0()
 disease_service = DiseaseServiceV1(neo4j_db)
-# health_goal_service = HealthGoalServiceV0()
-allergy_service = AllergyServiceV0()
+health_goal_service = HealthGoalServiceV1(neo4j_db)
+allergy_service = AllergyServiceV1(neo4j_db)
 
 
 class UserProfileServiceV1:

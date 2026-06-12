@@ -1,6 +1,6 @@
 from app.models.health_goal import HealthGoal
 from app.repositories.base_repo import BaseRepository
-from app.helpers.normalize import normalize_key
+from app.helpers.slug import generate_key
 
 
 class HealthGoalRepository(BaseRepository):
@@ -41,7 +41,7 @@ class HealthGoalRepository(BaseRepository):
     
     def _find_by_key(self, key: str):
         
-        _key = normalize_key(key)
+        _key = generate_key(key)
         
         def query(tx):
             result = tx.run("""
@@ -55,7 +55,7 @@ class HealthGoalRepository(BaseRepository):
 
     def create(self, health_goal: HealthGoal):
 
-        key = normalize_key(health_goal.name)
+        key = generate_key(health_goal.name)
 
         health_goal_data = self.prepare_entity({
             "name": health_goal.name,
@@ -82,7 +82,7 @@ class HealthGoalRepository(BaseRepository):
     
     def update(self, health_goal_id: int, name: str):
 
-        key = normalize_key(name)
+        key = generate_key(name)
 
         def _query(tx):
             result = tx.run("""
