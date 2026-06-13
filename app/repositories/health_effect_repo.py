@@ -1,21 +1,136 @@
 from app.models.health_effect import HealthEffect
+from app.repositories.base_repo import BaseRepository
+from app.helpers.slug import generate_key
 
 
-class HealthEffectRepository:
+class HealthEffectRepository(BaseRepository):
 
     def __init__(self, db):
-        self.db = db
+        super().__init__(db)
+
+    def _map_health_effect(self, record) -> HealthEffect:
+        he = record["he"]
+
+        return HealthEffect(
+            id=he.get("id"),
+            title=he.get("title"),
+            key=he.get("key"),
+            description=he.get("description")
+        )
 
     def get_all(self):
-        return self.db.health_effects
+        def _query(tx):
+            result = tx.run("""
+                MATCH (he:HealthEffect)
+                RETURN he
+            """)
+            return [self._map_health_effect(r) for r in result]
 
-    def get_by_id(self, health_effect_id: int):
-        return next((h for h in self.db.health_effects if h.id == health_effect_id), None)
+        return self.read(_query)
+
+    def get_by_id(self, effect_id: str):
+        def _query(tx):
+            result = tx.run("""
+                MATCH (he:HealthEffect {id: $id})
+                RETURN he
+                LIMIT 1
+            """, {"id": effect_id})
+
+            record = result.single()
+            return self._map_health_effect(record) if record else None
+
+        return self.read(_query)
+
+    def _find_by_key(self, key: str):
+
+        _key = generate_key(key)
+
+        def _query(tx):
+            result = tx.run("""
+                MATCH (he:HealthEffect {key: $key})
+                RETURN he
+                LIMIT 1
+            """, {"key": _key})
+
+            record = result.single()
+            return self._map_health_effect(record) if record else None
+
+        return self.read(_query)
 
     def create(self, health_effect: HealthEffect):
-        self.db.health_effects.append(health_effect)
-        return health_effect
 
-    def delete(self, health_effect_id: int):
-        self.db.health_effects[:] = [h for h in self.db.health_effects if h.id != health_effect_id]
-        return True
+        key = generate_key(health_effect.title)
+
+        effect_data = self.prepare_entity({
+            "title": health_effect.title,
+            "key": key,
+            "description": health_effect.description
+        })
+
+        def _query(tx):
+            result = tx.run("""
+                OPTIONAL MATCH (exist:HealthEffect {key: $key})
+                WITH exist
+                WHERE exist IS NULL
+
+                CREATE (he:HealthEffect $props)
+                RETURN he
+            """, {
+                "key": key,
+                "props": effect_data
+            })
+
+            record = result.single()
+            return self._map_health_effect(record) if record else None
+
+        return self.write(_query)
+
+    def update(
+        self,
+        effect_id: str,
+        title: str,
+        description: str
+    ):
+
+        key = generate_key(title)
+
+        def _query(tx):
+            result = tx.run("""
+                MATCH (he:HealthEffect {id: $id})
+
+                WITH he, $key AS key, $title AS title,
+                     $description AS description,
+                     $id AS id
+
+                WHERE NOT EXISTS {
+                    MATCH (dup:HealthEffect {key: key})
+                    WHERE dup.id <> id
+                }
+
+                SET he.title = title,
+                    he.key = key,
+                    he.description = description
+
+                RETURN he
+            """, {
+                "id": effect_id,
+                "title": title,
+                "key": key,
+                "description": description
+            })
+
+            record = result.single()
+            return self._map_health_effect(record) if record else None
+
+        return self.write(_query)
+
+    def delete(self, effect_id: str):
+        def _query(tx):
+            tx.run("""
+                MATCH (he:HealthEffect {id: $id})
+                DETACH DELETE he
+            """, {"id": effect_id})
+
+            return True
+
+        return self.write(_query)

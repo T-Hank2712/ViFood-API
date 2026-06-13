@@ -13,9 +13,6 @@ from app.utils.file_utils import ensure_directory_exists
 
 from app.core.database import neo4j_db
 
-from app.db import db
-from app.db.seed import seed
-
 # Import routers
 from app.routers import upload, example
 # from app.routers.products_alias import router as products_alias_router
@@ -24,12 +21,12 @@ from app.routers.v0.product import router as product_v0_router
 # from app.routers.v0.disease import router as disease_v0_router
 # from app.routers.v0.health_goal import router as health_goal_v0_router
 # from app.routers.v0.allergy import router as allergy_v0_router
-from app.routers.v0.nutrient import router as nutrient_v0_router
+# from app.routers.v0.nutrient import router as nutrient_v0_router
 from app.routers.v0.ingredient import router as ingredient_v0_router
 from app.routers.v0.additive import router as additive_v0_router
-from app.routers.v0.health_effect import router as health_effect_v0_router
-from app.routers.v0.food_category import router as food_category_v0_router
-from app.routers.v0.search_nutrition import router as search_nutrition_v0_router
+# from app.routers.v0.health_effect import router as health_effect_v0_router
+# from app.routers.v0.food_category import router as food_category_v0_router
+# from app.routers.v0.search_nutrition import router as search_nutrition_v0_router
 # from app.routers.v0.user_profile import router as user_profile_v0_router
 # from app.routers.v0.auth import router as auth_v0_router
 
@@ -39,6 +36,9 @@ from app.routers.v1.user_profile_v1 import router as profile_v1_router
 from app.routers.v1.health_goal_v1 import router as health_goal_v1_router
 from app.routers.v1.disease_v1 import router as disease_v1_router
 from app.routers.v1.allergy_v1 import router as allergy_v1_router
+from app.routers.v1.food_category_v1 import router as food_category_v1_router
+from app.routers.v1.health_effect_v1 import router as health_effect_v1_router
+from app.routers.v1.nutrient_v1 import router as nutrient_v1_router
 
 
 # Tạo FastAPI app instance
@@ -102,7 +102,7 @@ app.include_router(product_v0_router, prefix=f"{settings.api_prefix}/v0")
 # app.include_router(allergy_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 # Nutrient router (v0)
-app.include_router(nutrient_v0_router, prefix=f"{settings.api_prefix}/v0")
+# app.include_router(nutrient_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 # Ingredient router (v0)
 app.include_router(ingredient_v0_router, prefix=f"{settings.api_prefix}/v0")
@@ -111,13 +111,13 @@ app.include_router(ingredient_v0_router, prefix=f"{settings.api_prefix}/v0")
 app.include_router(additive_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 # Health Effect router (v0)
-app.include_router(health_effect_v0_router, prefix=f"{settings.api_prefix}/v0")
+# app.include_router(health_effect_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 # Food Category router (v0)
-app.include_router(food_category_v0_router, prefix=f"{settings.api_prefix}/v0")
+# app.include_router(food_category_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 # Search Nutrition router (v0)
-app.include_router(search_nutrition_v0_router, prefix=f"{settings.api_prefix}/v0")
+# app.include_router(search_nutrition_v0_router, prefix=f"{settings.api_prefix}/v0")
 
 # User Profile router (v0)
 # app.include_router(user_profile_v0_router, prefix=f"{settings.api_prefix}/v0")
@@ -136,6 +136,12 @@ app.include_router(health_goal_v1_router, prefix=f"{settings.api_prefix}/v1")
 app.include_router(disease_v1_router, prefix=f"{settings.api_prefix}/v1")
 
 app.include_router(allergy_v1_router, prefix=f"{settings.api_prefix}/v1")
+
+app.include_router(food_category_v1_router, prefix=f"{settings.api_prefix}/v1")
+
+app.include_router(health_effect_v1_router, prefix=f"{settings.api_prefix}/v1")
+
+app.include_router(nutrient_v1_router, prefix=f"{settings.api_prefix}/v1")
 
 
 # ==================== Root Endpoints ====================
@@ -210,7 +216,7 @@ async def startup_event():
     - Load models
     - etc.
     """
-    seed(db)  # Seed dữ liệu giả định vào database
+    # seed(db)  # Seed dữ liệu giả định vào database
     print(f"🚀 Starting {settings.app_name} v{settings.app_version}")
     print(f"📝 Docs: http://{settings.host}:{settings.port}/docs")
     print(f"🔧 API Prefix: {settings.api_prefix}")

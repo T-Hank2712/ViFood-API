@@ -2,14 +2,9 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.models.food_category import FoodCategory
-from app.models.health_effect import HealthEffect
-
 
 class Nutrient(BaseModel):
-    id: str
+    id: Optional[str] = None
     name: str
+    key: Optional[str] = None
     description: Optional[str] = None
-    image: Optional[str] = None
-    effects: list[HealthEffect] = []
-    found_in: list[FoodCategory] = []
