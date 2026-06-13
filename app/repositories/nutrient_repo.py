@@ -119,30 +119,28 @@ class NutrientRepository(BaseRepository):
 
         return self.write(_query)
     
-    def attach_effects(self, nutrient_id: str, effects: list[str]):
+    def attach_effect(self, nutrient_id: str, effect_id: str):
         def _query(tx):
             tx.run("""
                 MATCH (n:Nutrient {id: $nutrientId})
-                UNWIND $effects AS effectId
-                MATCH (eNode:HealthEffect {id: effectId})
-                MERGE (n)-[:HAS_EFFECT]->(eNode)
+                MATCH (e:HealthEffect {id: $effectId})
+                MERGE (n)-[:HAS_EFFECT]->(e)
             """, {
                 "nutrientId": nutrient_id,
-                "effects": effects
+                "effectId": effect_id
             })
 
         return self.write(_query)
 
-    def attach_categories(self, nutrient_id: str, categories: list[str]):
+    def attach_category(self, nutrient_id: str, category_id: str):
         def _query(tx):
             tx.run("""
                 MATCH (n:Nutrient {id: $nutrientId})
-                UNWIND $categories AS categoryId
-                MATCH (cNode:FoodCategory {id: categoryId})
-                MERGE (n)-[:IN_CATEGORY]->(cNode)
+                MATCH (c:FoodCategory {id: $categoryId})
+                MERGE (n)-[:IN_CATEGORY]->(c)
             """, {
                 "nutrientId": nutrient_id,
-                "categories": categories
+                "categoryId": category_id
             })
 
         return self.write(_query)

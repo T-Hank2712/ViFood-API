@@ -1,6 +1,8 @@
 from app.services.v1.nutrient_service_v1 import NutrientServiceV1
 from app.core.database import neo4j_db
 from app.schemas.nutrient_schema import CreateNutrientRequest, UpdateNutrientRequest
+from app.schemas.effect_schema import HealthEffectRequest
+from app.schemas.profile_schema import HealthProfileRequest
 from fastapi import APIRouter, HTTPException, status
 
 router = APIRouter(
@@ -95,5 +97,41 @@ def delete_nutrient(id: str):
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.post("/attach_effect_to_nutrient/{nutrient_id}")
+def attach_effect_to_nutrient(nutrient_id: str, payload: HealthEffectRequest):
+    try:
+        
+        result = nutrient_service.attach_effect_to_nutrient(nutrient_id, payload)
+
+        return {
+            "message": "Attach effect to nutrient success",
+            "data": result,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+        
+        
+@router.post("/attach_category_to_nutrient/{nutrient_id}")
+def attach_category_to_nutrient(nutrient_id: str, payload: HealthProfileRequest):
+    try:
+        
+        result = nutrient_service.attach_category_to_nutrient(nutrient_id, payload)
+
+        return {
+            "message": "Attach category to nutrient success",
+            "data": result,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
             detail=str(e)
         )

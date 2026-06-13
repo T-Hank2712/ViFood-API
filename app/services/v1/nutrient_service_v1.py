@@ -3,6 +3,8 @@ from app.repositories.nutrient_repo import NutrientRepository
 from app.schemas.nutrient_schema import CreateNutrientRequest, UpdateNutrientRequest
 from app.services.v1.health_effect_service_v1 import HealthEffectServiceV1
 from app.services.v1.food_category_service_v1 import FoodCategoryServiceV1
+from app.schemas.effect_schema import HealthEffectRequest
+from app.schemas.profile_schema import HealthProfileRequest
 
 
 class NutrientServiceV1:
@@ -63,3 +65,29 @@ class NutrientServiceV1:
         success = self.repo.delete(nutrient_id)
 
         return success
+    
+    def attach_effect_to_nutrient(self, nutrient_id: str, effect: HealthEffectRequest):
+        
+        nutrient = self.repo.get_by_id(nutrient_id)
+
+        if not nutrient:
+            raise ValueError("Nutrient not found")
+        
+        health_effect = self.effect_service.get_or_create_by_title(effect.title)
+        
+        self.repo.attach_effect(nutrient_id, health_effect.id)
+        
+        return True
+    
+    def attach_category_to_nutrient(self, nutrient_id: str, category: HealthProfileRequest):
+    
+        nutrient = self.repo.get_by_id(nutrient_id)
+
+        if not nutrient:
+            raise ValueError("Nutrient not found")
+        
+        category_node = self.food_category_service.get_or_create_by_name(category.name)
+        
+        self.repo.attach_category(nutrient_id, category_node.id)
+        
+        return True
