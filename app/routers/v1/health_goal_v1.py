@@ -206,9 +206,12 @@ def delete_health_goal(id: str):
     - v0 chỉ xóa dữ liệu trong bộ nhớ tạm
     """
     try:
-        health_goal_service.delete_health_goal(health_goal_id=id)
+        success = health_goal_service.delete_health_goal(health_goal_id=id)
         
-        return {"message": "Delete Health Goal success"}
+        return {
+          "message": "Delete Health Goal success",
+          "data": success
+        }
 
     except PermissionError as e:
 

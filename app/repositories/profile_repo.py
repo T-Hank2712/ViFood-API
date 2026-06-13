@@ -9,6 +9,7 @@ from app.schemas.update_profile import UpdateProfileRequest
 
 from app.repositories.health_goal_repo import HealthGoalRepository
 from app.repositories.disease_repo import DiseaseRepository
+from app.repositories.allergy_repo import AllergyRepository
 
 
 class UserProfileRepository(BaseRepository):
@@ -17,6 +18,7 @@ class UserProfileRepository(BaseRepository):
         super().__init__(db)
         self.health_goal_repo = HealthGoalRepository(db)
         self.disease_repo = DiseaseRepository(db)
+        self.allergy_repo = AllergyRepository(db)
 
     # =========================
     # BASIC

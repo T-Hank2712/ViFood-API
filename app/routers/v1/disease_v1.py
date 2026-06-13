@@ -85,10 +85,11 @@ def update_disease(id: str, payload: HealthProfileRequest):
 @router.delete("/{id}")
 def delete_disease(id: str):
     try:
-        disease_service.delete_disease(disease_id=id)
+        success = disease_service.delete_disease(disease_id=id)
 
         return {
-            "message": "Delete Disease success"
+            "message": "Delete Disease success",
+            "data": success
         }
 
     except ValueError as e:

@@ -85,10 +85,11 @@ def update_allergy(id: str, payload: HealthProfileRequest):
 @router.delete("/{id}")
 def delete_allergy(id: str):
     try:
-        allergy_service.delete_allergy(allergy_id=id)
+        success = allergy_service.delete_allergy(allergy_id=id)
 
         return {
-            "message": "Delete Allergy success"
+            "message": "Delete Allergy success",
+            "data": success
         }
 
     except ValueError as e:

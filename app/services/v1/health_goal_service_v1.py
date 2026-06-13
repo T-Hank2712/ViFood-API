@@ -49,6 +49,6 @@ class HealthGoalServiceV1:
         if not health_goal:
             raise ValueError("Health Goal not found")
 
-        self.repo.delete(health_goal_id)
+        success = self.repo.delete(health_goal_id)
 
-        return {"message": "Health Goal deleted successfully"}
+        return success

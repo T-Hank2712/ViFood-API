@@ -50,8 +50,6 @@ class DiseaseServiceV1:
         if not disease:
             raise ValueError("Disease not found")
 
-        self.repo.delete(disease_id)
+        success = self.repo.delete(disease_id)
 
-        return {
-            "message": "Disease deleted successfully"
-        }
+        return success

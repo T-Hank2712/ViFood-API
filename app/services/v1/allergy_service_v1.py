@@ -51,8 +51,6 @@ class AllergyServiceV1:
         if not allergy:
             raise ValueError("Allergy not found")
 
-        self.repo.delete(allergy_id)
+        success = self.repo.delete(allergy_id)
 
-        return {
-            "message": "Allergy deleted successfully"
-        }
+        return success

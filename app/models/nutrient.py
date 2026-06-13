@@ -7,7 +7,7 @@ from app.models.health_effect import HealthEffect
 
 
 class Nutrient(BaseModel):
-    id: int
+    id: str
     name: str
     description: Optional[str] = None
     image: Optional[str] = None

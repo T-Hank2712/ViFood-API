@@ -177,12 +177,15 @@ async def delete_user_profile(
 ):
 
     try:
-        profile_service.delete_family_member(
+        success = profile_service.delete_family_member(
             current_user_id=current_user["user_id"],
             target_profile_id=profile_id,
         )
 
-        return {"message": "Delete user profile success"}
+        return {
+            "message": "Delete user profile success",
+            "data": success
+        }
 
     except PermissionError as e:
 
@@ -286,7 +289,7 @@ async def remove_health_goal(
 ):
 
     try:
-        profile = profile_service.remove_health_goal_from_profile(
+        success = profile_service.remove_health_goal_from_profile(
             current_user_id=current_user["user_id"],
             target_profile_id=profile_id,
             health_goal_id=health_goal_id
@@ -294,7 +297,7 @@ async def remove_health_goal(
 
         return {
             "message": "Delete health goal success",
-            "data": profile
+            "data": success
         }
 
     except PermissionError as e:
