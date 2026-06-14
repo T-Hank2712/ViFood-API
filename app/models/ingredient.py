@@ -7,7 +7,7 @@ from app.models.health_effect import HealthEffect
 
 
 class Ingredient(BaseModel):
-    id: int
+    id: Optional[str] = None
     name: str
     description: str | None = None
     image: Optional[str] = None

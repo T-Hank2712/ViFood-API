@@ -101,7 +101,7 @@ def delete_nutrient(id: str):
         )
 
 
-@router.post("/attach_effect_to_nutrient/{nutrient_id}")
+@router.post("/health-effects/{nutrient_id}")
 def attach_effect_to_nutrient(nutrient_id: str, payload: HealthEffectRequest):
     try:
         
@@ -119,7 +119,7 @@ def attach_effect_to_nutrient(nutrient_id: str, payload: HealthEffectRequest):
         )
         
         
-@router.post("/attach_category_to_nutrient/{nutrient_id}")
+@router.post("/food-categories/{nutrient_id}")
 def attach_category_to_nutrient(nutrient_id: str, payload: HealthProfileRequest):
     try:
         
