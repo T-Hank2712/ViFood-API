@@ -1,5 +1,8 @@
 from app.models.ingredient import Ingredient
 from app.repositories.base_repo import BaseRepository
+from app.schemas.ingredient_schema import IngredientDetail
+from app.models.health_effect import HealthEffect
+from app.models.food_category import FoodCategory
 from app.helpers.slug import generate_key
 
 
@@ -16,6 +19,35 @@ class IngredientRepository(BaseRepository):
             name=n.get("name"),
             key=n.get("key"),
             description=n.get("description")
+        )
+        
+    def _map_ingredient_detail(self, record) -> IngredientDetail:
+        i = record["i"]
+
+        return IngredientDetail(
+            id=i.get("id"),
+            name=i.get("name"),
+            key=i.get("key"),
+            description=i.get("description"),
+            effects=[
+                HealthEffect(
+                    id=e.get("id"),
+                    title=e.get("title"),
+                    key=e.get("key"),
+                    description=e.get("description")
+                )
+                for e in record.get("effects", [])
+                if e and e.get("id")
+            ],
+            categories=[
+                FoodCategory(
+                    id=c.get("id"),
+                    name=c.get("name"),
+                    key=c.get("key")
+                )
+                for c in record.get("categories", [])
+                if c and c.get("id")
+            ]
         )
 
     def get_all(self):
@@ -38,6 +70,28 @@ class IngredientRepository(BaseRepository):
 
             record = result.single()
             return self._map_ingredient(record) if record else None
+
+        return self.read(_query)
+    
+    def get_ingredient_detail(self, ingredient_id: str):
+        def _query(tx):
+            result = tx.run("""
+                MATCH (i:Ingredient {id: $id})
+
+                OPTIONAL MATCH (i)-[:HAS_EFFECT]->(e:HealthEffect)
+                WITH i,
+                    COLLECT(DISTINCT e) AS effects
+
+                OPTIONAL MATCH (i)-[:IN_CATEGORY]->(c:FoodCategory)
+                WITH i,
+                    effects,
+                    COLLECT(DISTINCT c) AS categories
+
+                RETURN i, effects, categories
+            """, {"id": ingredient_id})
+
+            record = result.single()
+            return self._map_ingredient_detail(record) if record else None
 
         return self.read(_query)
 

@@ -48,6 +48,23 @@ def get_ingredient_by_id(id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
+        
+        
+@router.get("/detail/{id}")
+def get_ingredient_detail(id: str):
+    try:
+        ingredient = ingredient_service.get_ingredient_detail(id)
+
+        return {
+            "message": "Get Ingredient Detail success",
+            "data": ingredient,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
 
 
 @router.post("/")

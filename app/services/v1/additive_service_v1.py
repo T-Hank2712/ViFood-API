@@ -29,6 +29,14 @@ class AdditiveServiceV1:
             raise ValueError("Additive Not Found")
 
         return additive
+    
+    def get_additive_detail(self, additive_id: str):
+        additive = self.repo.get_additive_detail(additive_id)
+
+        if not additive:
+            raise ValueError("Additive Not Found")
+
+        return additive
 
     def create_additive(self, payload: CreateAdditiveRequest):
         existing = self.repo._find_by_key(payload.name)

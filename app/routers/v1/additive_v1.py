@@ -50,6 +50,23 @@ def get_additive_by_id(id: str):
         )
 
 
+@router.get("/detail/{id}")
+def get_nutrient_detail(id: str):
+    try:
+        additive = additive_service.get_additive_detail(id)
+
+        return {
+            "message": "Get Additive Detail success",
+            "data": additive,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
 @router.post("/")
 def create_additive(payload: CreateAdditiveRequest):
     try:

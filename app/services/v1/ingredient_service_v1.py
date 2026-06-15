@@ -29,6 +29,14 @@ class IngredientServiceV1:
             raise ValueError("Ingredient Not Found")
 
         return ingredient
+    
+    def get_ingredient_detail(self, ingredient_id: str):
+        ingredient = self.repo.get_ingredient_detail(ingredient_id)
+
+        if not ingredient:
+            raise ValueError("Ingredient Not Found")
+
+        return ingredient
 
     def create_ingredient(self, payload: CreateIngredientRequest):
         existing = self.repo._find_by_key(payload.name)

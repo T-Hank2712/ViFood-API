@@ -1,5 +1,8 @@
 from app.models.additive import Additive
 from app.repositories.base_repo import BaseRepository
+from app.schemas.additive_schema import AdditiveDetail
+from app.models.health_effect import HealthEffect
+from app.models.food_category import FoodCategory
 from app.helpers.slug import generate_key
 
 
@@ -17,6 +20,36 @@ class AdditiveRepository(BaseRepository):
             key=n.get("key"),
             code=n.get("code"),
             description=n.get("description")
+        )
+        
+    def _map_additive_detail(self, record) -> AdditiveDetail:
+        a = record["a"]
+
+        return AdditiveDetail(
+            id=a.get("id"),
+            name=a.get("name"),
+            key=a.get("key"),
+            code=a.get("code"),
+            description=a.get("description"),
+            effects=[
+                HealthEffect(
+                    id=e.get("id"),
+                    title=e.get("title"),
+                    key=e.get("key"),
+                    description=e.get("description")
+                )
+                for e in record.get("effects", [])
+                if e and e.get("id")
+            ],
+            categories=[
+                FoodCategory(
+                    id=c.get("id"),
+                    name=c.get("name"),
+                    key=c.get("key")
+                )
+                for c in record.get("categories", [])
+                if c and c.get("id")
+            ]
         )
 
     def get_all(self):
@@ -39,6 +72,28 @@ class AdditiveRepository(BaseRepository):
 
             record = result.single()
             return self._map_additive(record) if record else None
+
+        return self.read(_query)
+    
+    def get_additive_detail(self, additive_id: str):
+        def _query(tx):
+            result = tx.run("""
+                MATCH (a:Additive {id: $id})
+
+                OPTIONAL MATCH (a)-[:HAS_EFFECT]->(e:HealthEffect)
+                WITH a,
+                    COLLECT(DISTINCT e) AS effects
+
+                OPTIONAL MATCH (a)-[:IN_CATEGORY]->(c:FoodCategory)
+                WITH a,
+                    effects,
+                    COLLECT(DISTINCT c) AS categories
+
+                RETURN a, effects, categories
+            """, {"id": additive_id})
+
+            record = result.single()
+            return self._map_additive_detail(record) if record else None
 
         return self.read(_query)
 

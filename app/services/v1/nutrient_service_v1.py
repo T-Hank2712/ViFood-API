@@ -29,6 +29,14 @@ class NutrientServiceV1:
             raise ValueError("Nutrient Not Found")
 
         return nutrient
+    
+    def get_nutrient_detail(self, nutrient_id: str):
+        nutrient = self.repo.get_nutrient_detail(nutrient_id)
+
+        if not nutrient:
+            raise ValueError("Nutrient Not Found")
+
+        return nutrient
 
     def create_nutrient(self, payload: CreateNutrientRequest):
         existing = self.repo._find_by_key(payload.name)

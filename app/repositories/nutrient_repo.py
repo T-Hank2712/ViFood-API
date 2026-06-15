@@ -1,5 +1,8 @@
 from app.models.nutrient import Nutrient
 from app.repositories.base_repo import BaseRepository
+from app.schemas.nutrient_schema import NutrientDetail
+from app.models.health_effect import HealthEffect
+from app.models.food_category import FoodCategory
 from app.helpers.slug import generate_key
 
 
@@ -16,6 +19,35 @@ class NutrientRepository(BaseRepository):
             name=n.get("name"),
             key=n.get("key"),
             description=n.get("description")
+        )
+        
+    def _map_nutrient_detail(self, record) -> NutrientDetail:
+        n = record["n"]
+
+        return NutrientDetail(
+            id=n.get("id"),
+            name=n.get("name"),
+            key=n.get("key"),
+            description=n.get("description"),
+            effects=[
+                HealthEffect(
+                    id=e.get("id"),
+                    title=e.get("title"),
+                    key=e.get("key"),
+                    description=e.get("description")
+                )
+                for e in record.get("effects", [])
+                if e and e.get("id")
+            ],
+            categories=[
+                FoodCategory(
+                    id=c.get("id"),
+                    name=c.get("name"),
+                    key=c.get("key")
+                )
+                for c in record.get("categories", [])
+                if c and c.get("id")
+            ]
         )
 
     def get_all(self):
@@ -38,6 +70,28 @@ class NutrientRepository(BaseRepository):
 
             record = result.single()
             return self._map_nutrient(record) if record else None
+
+        return self.read(_query)
+    
+    def get_nutrient_detail(self, nutrient_id: str):
+        def _query(tx):
+            result = tx.run("""
+                MATCH (n:Nutrient {id: $id})
+
+                OPTIONAL MATCH (n)-[:HAS_EFFECT]->(e:HealthEffect)
+                WITH n,
+                    COLLECT(DISTINCT e) AS effects
+
+                OPTIONAL MATCH (n)-[:IN_CATEGORY]->(c:FoodCategory)
+                WITH n,
+                    effects,
+                    COLLECT(DISTINCT c) AS categories
+
+                RETURN n, effects, categories
+            """, {"id": nutrient_id})
+
+            record = result.single()
+            return self._map_nutrient_detail(record) if record else None
 
         return self.read(_query)
     

@@ -45,6 +45,23 @@ def get_nutrient_by_id(id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
+        
+        
+@router.get("/detail/{id}")
+def get_nutrient_detail(id: str):
+    try:
+        nutrient = nutrient_service.get_nutrient_detail(id)
+
+        return {
+            "message": "Get Nutrient Detail success",
+            "data": nutrient,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
 
 
 @router.post("/")
