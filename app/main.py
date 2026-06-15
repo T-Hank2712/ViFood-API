@@ -41,6 +41,7 @@ from app.routers.v1.health_effect_v1 import router as health_effect_v1_router
 from app.routers.v1.nutrient_v1 import router as nutrient_v1_router
 from app.routers.v1.ingredient_v1 import router as ingredient_v1_router
 from app.routers.v1.additive_v1 import router as additive_v1_router
+from app.routers.v1.search_v1 import router as search_v1_router
 
 
 # Tạo FastAPI app instance
@@ -148,6 +149,8 @@ app.include_router(nutrient_v1_router, prefix=f"{settings.api_prefix}/v1")
 app.include_router(ingredient_v1_router, prefix=f"{settings.api_prefix}/v1")
 
 app.include_router(additive_v1_router, prefix=f"{settings.api_prefix}/v1")
+
+app.include_router(search_v1_router, prefix=f"{settings.api_prefix}/v1")
 
 
 # ==================== Root Endpoints ====================
