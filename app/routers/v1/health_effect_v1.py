@@ -50,7 +50,7 @@ def get_health_effect_by_id(id: str):
 def create_health_effect(payload: HealthEffectRequest):
     try:
         effect = health_effect_service.create_health_effect(
-            title=payload.title,
+            name=payload.name,
             description=payload.description
         )
 

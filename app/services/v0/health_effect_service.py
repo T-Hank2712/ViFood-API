@@ -14,23 +14,23 @@ class HealthEffectServiceV0:
     def get_health_effect_by_id(self, health_effect_id: int):
         return self.repo.get_by_id(health_effect_id)
 
-    def create_health_effect(self, title: str):
+    def create_health_effect(self, name: str):
         new_id = len(self.repo.get_all()) + 1
 
         new_health_effect = HealthEffect(
             id=new_id,
-            title=title
+            name=name
         )
 
         return self.repo.create(new_health_effect)
 
-    def update_health_effect(self, health_effect_id: int, title: str):
+    def update_health_effect(self, health_effect_id: int, name: str):
         health_effect = self.repo.get_by_id(health_effect_id)
 
         if not health_effect:
             return None
 
-        health_effect.title = title
+        health_effect.name = name
         return health_effect
 
     def delete_health_effect(self, health_effect_id: int):

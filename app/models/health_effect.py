@@ -4,6 +4,6 @@ from typing import Optional
 
 class HealthEffect(BaseModel):
     id: Optional[str] = None
-    title: str
+    name: str
     key: Optional[str] = None
     description: Optional[str] = None

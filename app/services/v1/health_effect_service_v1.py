@@ -9,16 +9,16 @@ class HealthEffectServiceV1:
     def __init__(self, db):
         self.repo = HealthEffectRepository(db)
         
-    def get_or_create_by_title(self, title: str):
-        existing = self.repo._find_by_key(title)
+    def get_or_create_by_name(self, name: str):
+        existing = self.repo._find_by_key(name)
 
         if existing:
             return existing
         
-        key = generate_key(title)
+        key = generate_key(name)
 
         effect = HealthEffect(
-            title=title,
+            name=name,
             key=key
         )
 
@@ -42,16 +42,16 @@ class HealthEffectServiceV1:
 
     def create_health_effect(
         self,
-        title: str,
+        name: str,
         description: str
     ):
-        existing = self.repo._find_by_key(title)
+        existing = self.repo._find_by_key(name)
 
         if existing:
             raise ValueError("Health Effect already exists")
 
         effect = HealthEffect(
-            title=title,
+            name=name,
             description=description
         )
 
@@ -67,10 +67,10 @@ class HealthEffectServiceV1:
         if not effect:
             raise ValueError("Health Effect not found")
 
-        new_title = (
-            payload.title
-            if payload.title is not None
-            else effect.title
+        new_name = (
+            payload.name
+            if payload.name is not None
+            else effect.name
         )
 
         new_description = (
@@ -79,14 +79,14 @@ class HealthEffectServiceV1:
             else effect.description
         )
 
-        existing = self.repo._find_by_key(new_title)
+        existing = self.repo._find_by_key(new_name)
 
         if existing and existing.id != effect_id:
             raise ValueError("Health Effect already exists")
 
         return self.repo.update(
             effect_id=effect_id,
-            title=new_title,
+            name=new_name,
             description=new_description
         )
 

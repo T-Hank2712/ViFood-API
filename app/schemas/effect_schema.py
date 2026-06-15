@@ -3,5 +3,5 @@ from typing import Optional
     
 
 class HealthEffectRequest(BaseModel):
-    title: Optional[str] = None
+    name: Optional[str] = None
     description: Optional[str] = None

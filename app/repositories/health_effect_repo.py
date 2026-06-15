@@ -13,7 +13,7 @@ class HealthEffectRepository(BaseRepository):
 
         return HealthEffect(
             id=he.get("id"),
-            title=he.get("title"),
+            name=he.get("name"),
             key=he.get("key"),
             description=he.get("description")
         )
@@ -59,10 +59,10 @@ class HealthEffectRepository(BaseRepository):
 
     def create(self, health_effect: HealthEffect):
 
-        key = generate_key(health_effect.title)
+        key = generate_key(health_effect.name)
 
         effect_data = self.prepare_entity({
-            "title": health_effect.title,
+            "name": health_effect.name,
             "key": key,
             "description": health_effect.description
         })
@@ -88,17 +88,17 @@ class HealthEffectRepository(BaseRepository):
     def update(
         self,
         effect_id: str,
-        title: str,
+        name: str,
         description: str
     ):
 
-        key = generate_key(title)
+        key = generate_key(name)
 
         def _query(tx):
             result = tx.run("""
                 MATCH (he:HealthEffect {id: $id})
 
-                WITH he, $key AS key, $title AS title,
+                WITH he, $key AS key, $name AS name,
                      $description AS description,
                      $id AS id
 
@@ -107,14 +107,14 @@ class HealthEffectRepository(BaseRepository):
                     WHERE dup.id <> id
                 }
 
-                SET he.title = title,
+                SET he.name = name,
                     he.key = key,
                     he.description = description
 
                 RETURN he
             """, {
                 "id": effect_id,
-                "title": title,
+                "name": name,
                 "key": key,
                 "description": description
             })

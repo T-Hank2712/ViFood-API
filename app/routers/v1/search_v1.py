@@ -22,9 +22,9 @@ def get_nutritions():
 
 @router.get("/{id}", summary="Lấy chi tiết nutrition theo ID")
 def get_nutrition_by_id(
-    nutrition_id: str
+    id: str
 ):
-    result = search_service.get_by_id(nutrition_id)
+    result = search_service.get_by_id(id)
 
     if not result:
         raise HTTPException(

@@ -32,7 +32,7 @@ class IngredientRepository(BaseRepository):
             effects=[
                 HealthEffect(
                     id=e.get("id"),
-                    title=e.get("title"),
+                    name=e.get("name"),
                     key=e.get("key"),
                     description=e.get("description")
                 )

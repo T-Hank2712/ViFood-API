@@ -81,7 +81,7 @@ class NutrientServiceV1:
         if not nutrient:
             raise ValueError("Nutrient not found")
         
-        health_effect = self.effect_service.get_or_create_by_title(effect.title)
+        health_effect = self.effect_service.get_or_create_by_name(effect.name)
         
         self.repo.attach_effect(nutrient_id, health_effect.id)
         
