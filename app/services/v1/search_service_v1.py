@@ -1,4 +1,4 @@
-from app.models.DTOs.searchDTO import searchDTO
+from app.models.DTOs.searchDTO import searchDTO, searchDtoDetail
 from app.models.additive import Additive
 from app.models.ingredient import Ingredient
 from app.models.nutrient import Nutrient
@@ -6,6 +6,11 @@ from app.models.nutrient import Nutrient
 from app.services.v1.additive_service_v1 import AdditiveServiceV1
 from app.services.v1.ingredient_service_v1 import IngredientServiceV1
 from app.services.v1.nutrient_service_v1 import NutrientServiceV1
+
+from app.schemas.nutrient_schema import NutrientDetail
+from app.schemas.ingredient_schema import IngredientDetail
+from app.schemas.additive_schema import AdditiveDetail
+
 import random
 
 
@@ -23,6 +28,16 @@ class SearchServiceV1:
             description=n.description,
             type="nutrient"
         )
+
+    def map_nutrient_detail(self, n: NutrientDetail) -> searchDtoDetail:
+        return searchDtoDetail(
+            id=n.id,
+            name=n.name,
+            key=n.key,
+            description=n.description,
+            effects=n.effects,
+            categories=n.categories,
+        )
         
     def map_ingredient(self, i: Ingredient) -> searchDTO:
         return searchDTO(
@@ -31,6 +46,16 @@ class SearchServiceV1:
             key=i.key,
             description=i.description,
             type="ingredient"
+        )
+        
+    def map_ingredient_detail(self, i: IngredientDetail) -> searchDtoDetail:
+        return searchDtoDetail(
+            id=i.id,
+            name=i.name,
+            key=i.key,
+            description=i.description,
+            effects=i.effects,
+            categories=i.categories
         )
 
     def map_additive(self, a: Additive) -> searchDTO:
@@ -41,6 +66,17 @@ class SearchServiceV1:
             code=a.code,
             description=a.description,
             type="additive"
+        )
+        
+    def map_additive_detail(self, a: AdditiveDetail) -> searchDtoDetail:
+        return searchDtoDetail(
+            id=a.id,
+            name=a.name,
+            key=a.key,
+            code=a.code,
+            description=a.description,
+            effects=a.effects,
+            categories=a.categories,
         )
         
     def get_all(self) -> list[searchDTO]:
@@ -69,15 +105,15 @@ class SearchServiceV1:
             return None
 
         if prefix == "nutrient":
-            n = self.nutrient_service.get_nutrient_by_id(id_str)
-            return self.map_nutrient(n) if n else None
+            n = self.nutrient_service.get_nutrient_detail(id_str)
+            return self.map_nutrient_detail(n) if n else None
 
         elif prefix == "ingredient":
-            i = self.ingredient_service.get_ingredient_by_id(id_str)
-            return self.map_ingredient(i) if i else None
+            i = self.ingredient_service.get_ingredient_detail(id_str)
+            return self.map_ingredient_detail(i) if i else None
 
         elif prefix == "additive":
-            a = self.additive_service.get_additive_by_id(id_str)
-            return self.map_additive(a) if a else None
+            a = self.additive_service.get_additive_detail(id_str)
+            return self.map_additive_detail(a) if a else None
 
         return None
