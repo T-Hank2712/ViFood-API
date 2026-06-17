@@ -75,6 +75,9 @@ QUICKSTART.md
 SECURITY.md
 skills/
 
+# ---- Nginx config (mount trực tiếp vào container, không copy vào image) ----
+nginx/
+
 # ---- Uploads (sẽ dùng volume, không cần trong image) ----
 uploads/
 

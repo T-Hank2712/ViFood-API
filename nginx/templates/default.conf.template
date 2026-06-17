@@ -1,0 +1,94 @@
+# ==============================================================
+# default.conf.template — Nginx config với biến môi trường
+#
+# Nginx Docker image tự động xử lý file này khi container start:
+#   /etc/nginx/templates/*.template → envsubst → /etc/nginx/conf.d/*.conf
+#
+# Biến được inject từ .env (qua docker-compose env_file):
+#   ${DOMAIN}  — domain thực của bạn, VD: api.vifood.com
+#
+# LƯU Ý: Nginx variables ($host, $remote_addr...) phải viết $$
+#   để envsubst không thay thế nhầm → sau xử lý $$ trở thành $
+# ==============================================================
+
+upstream vifood_api {
+    server api:8000;
+    keepalive 32;
+}
+
+# ==============================================================
+# HTTP — port 80
+# Giai đoạn 1 (chưa có SSL): proxy thẳng vào API
+# Giai đoạn 2 (có SSL)     : redirect 301 → HTTPS
+# ==============================================================
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+
+    # Let's Encrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # --- Giai đoạn 1: chưa có SSL ---
+    # Xóa block location này và bỏ comment "return 301" bên dưới khi đã có SSL
+    location / {
+        proxy_pass         http://vifood_api;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade           $$http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_set_header   Host              $$host;
+        proxy_set_header   X-Real-IP         $$remote_addr;
+        proxy_set_header   X-Forwarded-For   $$proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $$scheme;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+    }
+
+    # --- Giai đoạn 2: bật khi có SSL ---
+    # return 301 https://${DOMAIN}$$request_uri;
+}
+
+# ==============================================================
+# HTTPS — port 443
+# Bỏ comment toàn bộ block này sau khi xin SSL thành công:
+#   docker compose -f docker-compose.prod.yml run --rm certbot \
+#     certonly --webroot -w /var/www/certbot \
+#     -d ${DOMAIN} --email your@email.com --agree-tos --no-eff-email
+# ==============================================================
+# server {
+#     listen 443 ssl http2;
+#     listen [::]:443 ssl http2;
+#     server_name ${DOMAIN};
+#
+#     ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+#
+#     ssl_protocols             TLSv1.2 TLSv1.3;
+#     ssl_ciphers               ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+#     ssl_prefer_server_ciphers off;
+#     ssl_session_cache         shared:SSL:10m;
+#     ssl_session_timeout       1d;
+#
+#     add_header Strict-Transport-Security "max-age=63072000" always;
+#     add_header X-Frame-Options           DENY;
+#     add_header X-Content-Type-Options    nosniff;
+#
+#     gzip            on;
+#     gzip_types      application/json text/plain text/css application/javascript;
+#     gzip_min_length 1024;
+#
+#     location / {
+#         proxy_pass         http://vifood_api;
+#         proxy_http_version 1.1;
+#         proxy_set_header   Upgrade           $$http_upgrade;
+#         proxy_set_header   Connection        "upgrade";
+#         proxy_set_header   Host              $$host;
+#         proxy_set_header   X-Real-IP         $$remote_addr;
+#         proxy_set_header   X-Forwarded-For   $$proxy_add_x_forwarded_for;
+#         proxy_set_header   X-Forwarded-Proto $$scheme;
+#         proxy_read_timeout 120s;
+#         proxy_send_timeout 120s;
+#     }
+# }

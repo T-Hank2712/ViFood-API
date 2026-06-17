@@ -1,0 +1,107 @@
+services:
+  # ============================================================
+  # Neo4j Database (giống dev, nhưng không expose 7474 ra ngoài)
+  # ============================================================
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: vifood-neo4j
+    restart: unless-stopped
+    # Production: KHÔNG expose port 7474 (Neo4j browser) ra internet
+    # Chỉ expose Bolt để debug nếu cần (có thể comment dòng dưới)
+    ports:
+      - "127.0.0.1:7687:7687"    # Bind localhost only, không public
+    environment:
+      NEO4J_AUTH: ${NEO4J_USERNAME}/${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "-q", "http://localhost:7474"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================================
+  # FastAPI Application
+  # Image được pull từ Docker Hub — KHÔNG build trên VPS
+  # VIFOOD_IMAGE được set bởi deploy.sh, VD: user/vifood-api:sha-a1b2c3d
+  # ============================================================
+  api:
+    image: ${VIFOOD_IMAGE:-vifood-api:latest}
+    container_name: vifood-api
+    restart: unless-stopped
+    # KHÔNG expose port ra ngoài — chỉ Nginx mới gọi vào API
+    # (Nginx và API cùng Docker network nên liên lạc trực tiếp)
+    expose:
+      - "8000"
+    env_file:
+      - .env    # File .env đặt trên VPS tại /opt/vifood/.env
+    environment:
+      # Override để API kết nối Neo4j qua Docker network (không phải localhost)
+      NEO4J_URI: bolt://neo4j:7687
+    volumes:
+      # Named volume — uploads tồn tại kể cả khi pull image mới
+      - uploads_data:/app/uploads
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================
+  # Nginx Reverse Proxy
+  # Giai đoạn 1: HTTP port 80 → proxy vào API
+  # Giai đoạn 2: HTTPS 443 + redirect 80→443 (bật khi có domain + SSL)
+  #
+  # Nginx Docker image tự động chạy envsubst trên
+  # nginx/templates/*.conf.template → /etc/nginx/conf.d/*.conf
+  # Biến ${DOMAIN} được inject từ .env
+  # ============================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: vifood-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env    # Nginx cần DOMAIN từ .env để envsubst xử lý template
+    volumes:
+      # Template folder — nginx image tự xử lý envsubst khi start
+      - ./nginx/templates:/etc/nginx/templates:ro
+      # SSL certificates
+      - certbot_certs:/etc/letsencrypt:ro
+      # ACME challenge webroot
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - api
+
+# ============================================================
+# Named volumes — data không bị mất khi restart hay update image
+# ============================================================
+volumes:
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_import:
+    driver: local
+  uploads_data:
+    driver: local
+  # SSL certificates — persist khi certbot renew
+  certbot_certs:
+    driver: local
+  certbot_www:
+    driver: local
+
+networks:
+  default:
+    name: vifood-network
