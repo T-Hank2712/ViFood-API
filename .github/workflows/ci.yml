@@ -10,9 +10,11 @@ on:
     branches:
       - develop
 
-# Chỉ cần quyền đọc code — không auto-merge, không write
+# contents: write — cần để auto-merge (squash commit vào develop)
+# pull-requests: write — cần để gọi API merge PR
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 # Hủy run cũ khi có commit mới push vào cùng PR → tiết kiệm runner minutes
 concurrency:
@@ -197,3 +199,31 @@ jobs:
         run: |
           docker stop vifood-ci-smoke || true
           docker rm vifood-ci-smoke || true
+
+  # ============================================================
+  # JOB 3: Auto-merge
+  # Chỉ chạy khi CẢ HAI job trên đều pass
+  # Chỉ merge PR từ chính repo này (không merge từ fork)
+  # ============================================================
+  auto-merge:
+    name: Auto-merge PR
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, docker-build]
+    # Chỉ chạy khi event là pull_request (không chạy trên push vào develop)
+    # và PR từ cùng repo (tránh fork PR có thể inject code độc hại)
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Merge pull request
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              merge_method: 'squash',
+            });
