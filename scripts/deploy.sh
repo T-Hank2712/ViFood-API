@@ -21,8 +21,7 @@ DOCKER_USERNAME="${2:?Thiếu docker_username. VD: myusername}"
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/vifood}"
 COMPOSE_FILE="$DEPLOY_DIR/docker-compose.prod.yml"
 FULL_IMAGE="${DOCKER_USERNAME}/vifood-api:${IMAGE_TAG}"
-# Health check chạy bên trong container (tránh phụ thuộc vào port mapping của host)
-HEALTH_CONTAINER="vifood-api"
+HEALTH_URL="http://localhost:${PORT:-8000}/health"
 MAX_RETRIES=15
 RETRY_INTERVAL=4    # seconds — tổng timeout = 15 * 4 = 60s
 
@@ -59,20 +58,16 @@ echo "[2/5] .env updated: VIFOOD_IMAGE=${FULL_IMAGE}"
 echo "[3/5] Pulling image from Docker Hub..."
 docker pull "$FULL_IMAGE"
 
-# ---- Restart services (giữ Neo4j đang chạy, không restart DB) ----
-echo "[4/5] Restarting services..."
+# ---- Restart service api (giữ Neo4j đang chạy, không restart DB) ----
+echo "[4/5] Restarting API service..."
 docker compose -f "$COMPOSE_FILE" up -d --no-build --no-recreate neo4j
 docker compose -f "$COMPOSE_FILE" up -d --no-build api
-docker compose -f "$COMPOSE_FILE" up -d --no-build nginx
 
 # ---- Health check ----
 echo "[5/5] Health check ($MAX_RETRIES retries x ${RETRY_INTERVAL}s)..."
 for i in $(seq 1 "$MAX_RETRIES"); do
     sleep "$RETRY_INTERVAL"
-    # Chạy curl bên trong container — không cần port expose ra host
-    HTTP_STATUS=$(docker exec "$HEALTH_CONTAINER" \
-        curl -sf -o /dev/null -w "%{http_code}" \
-        http://localhost:8000/health 2>/dev/null || echo "000")
+    HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
 
     if [ "$HTTP_STATUS" = "200" ]; then
         echo ""
