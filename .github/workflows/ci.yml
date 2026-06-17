@@ -1,83 +1,199 @@
 name: CI
 
+# Trigger: mỗi PR nhắm vào branch develop
+# Push vào develop trực tiếp cũng chạy (bảo vệ sau merge)
 on:
   pull_request:
     branches:
       - develop
+  push:
+    branches:
+      - develop
 
+# Chỉ cần quyền đọc code — không auto-merge, không write
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+
+# Hủy run cũ khi có commit mới push vào cùng PR → tiết kiệm runner minutes
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  quality-and-test:
-    name: Lint and Test
+  # ============================================================
+  # JOB 1: Lint + Test
+  # Mục tiêu: phát hiện lỗi cú pháp, logic, và regression sớm
+  # ============================================================
+  lint-and-test:
+    name: Lint & Test (Python 3.11)
     runs-on: ubuntu-latest
+
     env:
+      # Đặt PYTHONPATH để import `app` hoạt động đúng khi chạy pytest
       PYTHONPATH: ${{ github.workspace }}
+      # Biến môi trường tối thiểu cho Settings validation (không cần Neo4j thật)
+      # conftest.py đã setdefault nhưng đặt ở đây để explicit và dễ audit
+      NEO4J_URI: bolt://127.0.0.1:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: ci-placeholder
+      NEO4J_DATABASE: neo4j
+      SECRET_KEY: ci-secret-key-not-used-in-production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "15"
+      REFRESH_TOKEN_EXPIRE_DAYS: "30"
 
     steps:
+      # ----------------------------------------------------------
+      # 1. Checkout
+      # ----------------------------------------------------------
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      # ----------------------------------------------------------
+      # 2. Setup Python với pip cache
+      # Cache key tự động dựa vào hash của requirements.txt
+      # Nếu requirements.txt không đổi → bước install chỉ mất ~5s
+      # ----------------------------------------------------------
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
           cache-dependency-path: requirements.txt
 
+      # ----------------------------------------------------------
+      # 3. Install dependencies
+      # flake8 tách riêng khỏi requirements.txt (dev-only tool)
+      # ----------------------------------------------------------
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+          pip install -r requirements.txt
           pip install flake8
 
-      - name: Run flake8 lint
+      # ----------------------------------------------------------
+      # 4. Flake8 lint
+      # Cấu hình đọc từ .flake8 (max-line-length=140, extend-ignore=W293)
+      # fail-fast: nếu có lỗi lint → job dừng ngay, không chạy test
+      # ----------------------------------------------------------
+      - name: Run flake8
         run: flake8 .
 
-      - name: Run pytest (skip fail when no tests)
+      # ----------------------------------------------------------
+      # 5. Pytest
+      # - Neo4j KHÔNG được khởi động → chỉ chạy được unit tests
+      #   (tests không cần DB thật)
+      # - exit code 5 = "no tests collected" → vẫn pass (dự án mới)
+      # - Dùng -x để dừng ngay khi test đầu tiên fail (fail-fast)
+      # ----------------------------------------------------------
+      - name: Run pytest
         run: |
-          if python - <<'PY'
-          import importlib.util
-          import sys
-          sys.exit(0 if importlib.util.find_spec('pytest') else 1)
-          PY
-          then
-            set +e
-            python -m pytest -q
-            code=$?
-            set -e
-            if [ "$code" -eq 0 ] || [ "$code" -eq 5 ]; then
-              echo "Pytest completed (or no tests collected)."
-            else
-              exit "$code"
-            fi
-          else
-            echo "pytest is not installed. Skipping tests."
-          fi
+          set +e
 
-  auto-merge:
-    name: Auto merge PR
+          python -m pytest \
+            --tb=short \
+            -x \
+            -q \
+            --ignore=test_api.py
+
+          code=$?
+
+          set -e
+
+          if [ "$code" -eq 0 ] || [ "$code" -eq 5 ]; then
+            echo "Pytest passed or no tests collected."
+          else
+            exit "$code"
+          fi
+        # test_api.py là script manual (dùng requests, cần server thật)
+        # → bỏ qua trong CI
+
+  # ============================================================
+  # JOB 2: Docker Build
+  # Mục tiêu: xác nhận Dockerfile build được trên môi trường sạch
+  # Chạy song song với lint-and-test để tiết kiệm thời gian
+  # ============================================================
+  docker-build:
+    name: Docker Build Verification
     runs-on: ubuntu-latest
-    needs: quality-and-test
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.base.ref == 'develop' &&
-      github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
-      - name: Merge pull request when checks pass
-        uses: actions/github-script@v7
+      # ----------------------------------------------------------
+      # 1. Checkout
+      # ----------------------------------------------------------
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------------
+      # 2. Setup Docker Buildx
+      # Buildx hỗ trợ build cache nâng cao (--cache-from/--cache-to)
+      # ----------------------------------------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ----------------------------------------------------------
+      # 3. Build Docker image với GitHub Actions cache
+      # - cache-from/cache-to: lưu layer cache vào GitHub Actions Cache
+      # - load: false vì chỉ cần verify build thành công, không cần push
+      # - Nếu requirements.txt không đổi → layer pip install được cache
+      # ----------------------------------------------------------
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            await github.rest.pulls.merge({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              merge_method: 'squash'
-            });
+          context: .
+          file: ./Dockerfile
+          target: production
+          push: false
+          load: true
+          tags: vifood-api:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ----------------------------------------------------------
+      # 4. Smoke test image
+      # Chạy container với env vars giả, gọi /health để kiểm tra
+      # app khởi động được (import đúng, không crash)
+      # ----------------------------------------------------------
+      - name: Smoke test — verify image starts and /health responds
+        run: |
+          docker run -d \
+            --name vifood-ci-smoke \
+            -p 8000:8000 \
+            -e NEO4J_URI=bolt://127.0.0.1:7687 \
+            -e NEO4J_USERNAME=neo4j \
+            -e NEO4J_PASSWORD=ci-placeholder \
+            -e NEO4J_DATABASE=neo4j \
+            -e SECRET_KEY=ci-secret \
+            -e ALGORITHM=HS256 \
+            -e ACCESS_TOKEN_EXPIRE_MINUTES=15 \
+            -e REFRESH_TOKEN_EXPIRE_DAYS=30 \
+            vifood-api:ci-${{ github.sha }}
+
+          # Chờ container khởi động (tối đa 30s)
+          echo "Waiting for container to start..."
+          for i in $(seq 1 15); do
+            sleep 2
+            STATUS=$(docker inspect --format='{{.State.Status}}' vifood-ci-smoke 2>/dev/null || echo "missing")
+            if [ "$STATUS" = "running" ]; then
+              echo "Container is running."
+              break
+            fi
+            echo "Attempt $i: status=$STATUS"
+          done
+
+          # Kiểm tra /health trả về HTTP 200
+          # --retry để thử lại nếu app chưa sẵn sàng
+          curl --fail \
+            --retry 5 \
+            --retry-delay 3 \
+            --retry-connrefused \
+            http://localhost:8000/health
+
+      # ----------------------------------------------------------
+      # 5. Cleanup (luôn chạy kể cả khi smoke test fail)
+      # ----------------------------------------------------------
+      - name: Cleanup smoke test container
+        if: always()
+        run: |
+          docker stop vifood-ci-smoke || true
+          docker rm vifood-ci-smoke || true
