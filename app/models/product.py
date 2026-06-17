@@ -1,66 +1,46 @@
-"""
-Product Models
-Schema cho product response
-"""
-
-from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 
-class ProductNutrition(BaseModel):
-    energy: Optional[str] = Field(default=None, example="450 kcal")
-    protein: Optional[str] = Field(default=None, example="12 g")
-    fat: Optional[str] = Field(default=None, example="18 g")
-    sugar: Optional[str] = Field(default=None, example="20 g")
-
-
 class Product(BaseModel):
-    id: int = Field(..., alias="_id", example=123)
-    user_id: int = Field(..., example=1)
-    product_name: str = Field(..., example="Sữa ABC")
+    product_name: Optional[str] = None
 
-    age_range: Optional[str] = Field(default=None, example="1-3 tuổi")
+    age_range: Optional[str] = None
 
-    ingredients: List[str] = Field(
-        default_factory=list,
-        example=["Sữa bột", "Đường", "Dầu thực vật"]
-    )
+    ingredients: List[str] = Field(default_factory=list)
 
-    additive: List[str] = Field(
-        default_factory=list,
-        example=["Chất điều vị (INS 621)"]
-    )
+    additive: List[str] = Field(default_factory=list)
 
-    nutrition: ProductNutrition
+    nutrition: Dict[str, str] = Field(default_factory=dict)
 
-    manufacturer: Optional[str] = Field(default=None, example="Công ty XYZ")
+    manufacturer: Optional[str] = None
 
-    mfg_date: Optional[str] = Field(default=None, example="2025-12-31")
-    expiry_date: Optional[str] = Field(default=None, example="2027-12-31")
+    mfg_date: Optional[str] = None
 
-    net_weight: Optional[str] = Field(default=None, example="900g")
+    expiry_date: Optional[str] = None
 
-    allergen: Optional[str] = Field(default=None, example="Sản phẩm có chứa sữa")
+    net_weight: Optional[str] = None
 
-    warning: Optional[str] = Field(default=None, example="Không sử dụng cho trẻ em dưới 3 tuổi")
+    allergen: Optional[str] = None
 
-    origin: Optional[str] = Field(default=None, example="Việt Nam")
+    warning: Optional[str] = None
 
-    createdAt: datetime = Field(..., example="2026-06-09T05:27:07.241790Z")
-    timeZone: str = Field(..., example="Asia/Ho_Chi_Minh")
-    createdAtLocal: datetime = Field(..., example="2026-06-09T12:27:07.241790+07:00")
+    origin: Optional[str] = None
 
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
-                "_id": 123,
                 "product_name": "Sữa ABC",
                 "age_range": "1-3 tuổi",
-                "ingredients": ["Sữa bột", "Đường", "Dầu thực vật"],
-                "additive": ["Chất điều vị (INS 621)"],
+                "ingredients": [
+                    "Sữa bột",
+                    "Đường",
+                    "Dầu thực vật"
+                ],
+                "additive": [
+                    "Chất điều vị (INS 621)"
+                ],
                 "nutrition": {
                     "energy": "450 kcal",
                     "protein": "12 g",
@@ -73,24 +53,33 @@ class Product(BaseModel):
                 "net_weight": "900g",
                 "allergen": "Sản phẩm có chứa sữa",
                 "warning": "Không sử dụng cho trẻ em dưới 3 tuổi",
-                "origin": "Việt Nam",
-                "createdAt": "2026-03-02T13:16:00.955Z",
-                "timeZone": "Asia/Ho_Chi_Minh",
-                "createdAtLocal": "2026-03-02 20:16:00"
+                "origin": "Việt Nam"
             }
         }
-        
-        
+    }
+
+
 class ProductCreate(BaseModel):
-    product_name: str
+    product_name: Optional[str] = None
+
     age_range: Optional[str] = None
+
     ingredients: List[str] = Field(default_factory=list)
+
     additive: List[str] = Field(default_factory=list)
-    nutrition: Optional[ProductNutrition] = None
+
+    nutrition: Dict[str, str] = Field(default_factory=dict)
+
     manufacturer: Optional[str] = None
+
     mfg_date: Optional[str] = None
+
     expiry_date: Optional[str] = None
+
     net_weight: Optional[str] = None
+
     allergen: Optional[str] = None
+
     warning: Optional[str] = None
+
     origin: Optional[str] = None
