@@ -1,0 +1,83 @@
+# ==============================================================
+# .dockerignore — loại trừ files không cần thiết khỏi build context
+# Giảm kích thước context gửi lên Docker daemon → build nhanh hơn
+# ==============================================================
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+.env.local
+.env.*.local
+
+# ---- Sensitive config — KHÔNG bao giờ copy .env thật vào image ----
+.env
+.env.production
+.env.staging
+*.secret
+
+# ---- Testing & coverage ----
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.log
+pytest.ini
+tests/
+test_*.py
+
+# ---- Git ----
+.git/
+.gitignore
+.gitattributes
+
+# ---- IDE / Editor ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---- Docker itself ----
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# ---- Docs & README ----
+*.md
+docs/
+QUICKSTART.md
+SECURITY.md
+skills/
+
+# ---- Uploads (sẽ dùng volume, không cần trong image) ----
+uploads/
+
+# ---- Node / misc (nếu có frontend sau này) ----
+node_modules/
+.npm/

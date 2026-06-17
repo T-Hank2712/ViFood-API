@@ -1,0 +1,77 @@
+services:
+  # ============================================================
+  # Neo4j Database
+  # Giao diện browser: http://localhost:7474
+  # Bolt port (driver kết nối): 7687
+  # ============================================================
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: vifood-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"   # HTTP browser UI
+      - "7687:7687"   # Bolt protocol (driver)
+    environment:
+      # Tài khoản Neo4j — phải khớp với NEO4J_USERNAME / NEO4J_PASSWORD trong .env
+      NEO4J_AUTH: ${NEO4J_USERNAME}/${NEO4J_PASSWORD}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "-q", "http://localhost:7474"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s    # Neo4j khởi động chậm hơn so với SQL DB
+
+  # ============================================================
+  # FastAPI Application
+  # ============================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: vifood-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - .env    # Đọc tất cả biến môi trường từ file .env
+    environment:
+      # Override NEO4J_URI để trỏ tới service neo4j trong Docker network
+      # (thay localhost bằng tên service "neo4j")
+      NEO4J_URI: bolt://neo4j:7687
+    volumes:
+      # Persist uploads ra ngoài container (không mất khi restart)
+      - ./uploads:/app/uploads
+    depends_on:
+      neo4j:
+        condition: service_healthy    # Chờ Neo4j ready trước khi start API
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# ============================================================
+# Named volumes — data tồn tại kể cả khi container bị xóa
+# ============================================================
+volumes:
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_import:
+    driver: local
+
+# ============================================================
+# Custom network (tùy chọn — mặc định Compose tạo network riêng)
+# ============================================================
+networks:
+  default:
+    name: vifood-network
