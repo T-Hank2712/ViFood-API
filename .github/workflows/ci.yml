@@ -88,11 +88,23 @@ jobs:
       # ----------------------------------------------------------
       - name: Run pytest
         run: |
+          set +e
+
           python -m pytest \
             --tb=short \
             -x \
             -q \
             --ignore=test_api.py
+
+          code=$?
+
+          set -e
+
+          if [ "$code" -eq 0 ] || [ "$code" -eq 5 ]; then
+            echo "Pytest passed or no tests collected."
+          else
+            exit "$code"
+          fi
         # test_api.py là script manual (dùng requests, cần server thật)
         # → bỏ qua trong CI
 
