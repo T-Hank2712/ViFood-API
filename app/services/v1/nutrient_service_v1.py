@@ -99,3 +99,27 @@ class NutrientServiceV1:
         self.repo.attach_category(nutrient_id, category_node.id)
         
         return True
+
+    def create_many_nutrients(self, requests: list[CreateNutrientRequest]):
+        created = []
+
+        for req in requests:
+            existing = self.repo._find_by_key(req.name)
+
+            if existing:
+                continue
+
+            nutrient = Nutrient(
+                name=req.name,
+                description=req.description
+            )
+
+            created_nutrient = self.repo.create(nutrient)
+
+            if created_nutrient:
+                created.append(created_nutrient)
+
+        if not created:
+            raise ValueError("All nutrients already exist or nothing was created")
+
+        return created

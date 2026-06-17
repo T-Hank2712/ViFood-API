@@ -2,6 +2,7 @@ from app.services.v1.disease_service_v1 import DiseaseServiceV1
 from app.core.database import neo4j_db
 from app.schemas.profile_schema import HealthProfileRequest
 from fastapi import APIRouter, HTTPException, status
+from app.schemas.name_schema import NameRequest
 
 router = APIRouter(
     prefix="/diseases",
@@ -53,6 +54,23 @@ def create_disease(payload: HealthProfileRequest):
         return {
             "message": "Create Disease success",
             "data": disease,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+        
+        
+@router.post("/bulk")
+def create_many_diseases(payload: list[NameRequest]):
+    try:
+        result = disease_service.create_many_diseases(payload)
+
+        return {
+            "message": "Bulk create diseases success",
+            "data": result
         }
 
     except ValueError as e:

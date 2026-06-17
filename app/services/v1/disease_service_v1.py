@@ -1,5 +1,6 @@
 from app.models.disease import Disease
 from app.repositories.disease_repo import DiseaseRepository
+from app.schemas.name_schema import NameRequest
 
 
 class DiseaseServiceV1:
@@ -53,3 +54,26 @@ class DiseaseServiceV1:
         success = self.repo.delete(disease_id)
 
         return success
+
+    def create_many_diseases(self, requests: list[NameRequest]):
+        created = []
+
+        for req in requests:
+            existing = self.repo._find_by_key(req.name)
+
+            if existing:
+                continue
+
+            disease = Disease(
+                name=req.name
+            )
+
+            created_disease = self.repo.create(disease)
+
+            if created_disease:
+                created.append(created_disease)
+
+        if not created:
+            raise ValueError("All diseases already exist or nothing was created")
+
+        return created

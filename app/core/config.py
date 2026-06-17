@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     neo4j_uri: str
     neo4j_username: str
     neo4j_password: str
-    neo4j_database: str
+    neo4j_database: str = Field(default="neo4j")
     
     # ==================== Server Settings ====================
     host: str = "0.0.0.0"
