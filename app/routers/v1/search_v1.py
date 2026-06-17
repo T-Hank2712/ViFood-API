@@ -18,6 +18,23 @@ def get_nutritions():
             "message": "Get All Nutri success",
             "data": nutritions,
         }
+    
+
+@router.get("/daily", summary="Lấy ngẫu nhiên một chất cho mỗi ngày")
+def get_daily_future(
+):
+    result = search_service.get_daily_feature()
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Not found"
+        )
+        
+    return {
+            "message": "Get Nutri Detail success",
+            "data": result,
+        }
 
 
 @router.get("/{id}", summary="Lấy chi tiết nutrition theo ID")

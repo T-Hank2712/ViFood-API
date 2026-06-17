@@ -11,6 +11,8 @@ from app.schemas.nutrient_schema import NutrientDetail
 from app.schemas.ingredient_schema import IngredientDetail
 from app.schemas.additive_schema import AdditiveDetail
 
+from datetime import date
+
 import random
 
 
@@ -117,3 +119,23 @@ class SearchServiceV1:
             return self.map_additive_detail(a) if a else None
 
         return None
+    
+    # Chức năng này chưa được tối ưu
+    def get_daily_feature(self) -> searchDTO | None:
+        items = (
+            [self.map_nutrient(n) for n in self.nutrient_service.get_all_nutrients()]
+            + [self.map_ingredient(i) for i in self.ingredient_service.get_all_ingredients()]
+            + [self.map_additive(a) for a in self.additive_service.get_all_additives()]
+        )
+
+        if not items:
+            return None
+
+        # Tạo thứ tự cố định nhưng ngẫu nhiên
+        rng = random.Random(2025)
+        rng.shuffle(items)
+
+        # Mỗi ngày lấy 1 item tiếp theo
+        index = date.today().toordinal() % len(items)
+
+        return items[index]
