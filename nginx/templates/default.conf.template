@@ -11,10 +11,9 @@
 #   để envsubst không thay thế nhầm → sau xử lý $$ trở thành $
 # ==============================================================
 
-upstream vifood_api {
-    server api:8000;
-    keepalive 32;
-}
+# Docker internal DNS — resolve upstream theo tên service lúc có request
+# (không resolve tại startup → tránh lỗi "host not found" khi Nginx start trước api)
+resolver 127.0.0.11 valid=10s ipv6=off;
 
 # ==============================================================
 # HTTP — port 80
@@ -34,7 +33,8 @@ server {
     # --- Giai đoạn 1: chưa có SSL ---
     # Xóa block location này và bỏ comment "return 301" bên dưới khi đã có SSL
     location / {
-        proxy_pass         http://vifood_api;
+        set $$upstream http://api:8000;
+        proxy_pass         $$upstream;
         proxy_http_version 1.1;
         proxy_set_header   Upgrade           $$http_upgrade;
         proxy_set_header   Connection        "upgrade";
