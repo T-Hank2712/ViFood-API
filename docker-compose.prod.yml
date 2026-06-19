@@ -76,7 +76,8 @@ services:
     # Generate self-signed cert cho catch-all block (chặn truy cập thẳng IP)
     # Cert thực (Let's Encrypt) vẫn dùng cho domain chính
     command: >
-      sh -c "mkdir -p /etc/nginx/ssl &&
+      sh -c "apk add --no-cache openssl &&
+             mkdir -p /etc/nginx/ssl &&
              openssl req -x509 -nodes -newkey rsa:2048
                -keyout /etc/nginx/ssl/self-signed.key
                -out /etc/nginx/ssl/self-signed.crt
