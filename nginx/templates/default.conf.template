@@ -18,17 +18,12 @@ resolver 127.0.0.11 valid=10s ipv6=off;
 # ==============================================================
 # Catch-all — chặn truy cập trực tiếp bằng IP (không khớp domain)
 # Trả về 444: Nginx đóng kết nối ngay, không gửi response
+# (443 catch-all thêm vào sau khi có SSL)
 # ==============================================================
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    listen 443 ssl default_server;
-    listen [::]:443 ssl default_server;
     server_name _;
-
-    # Self-signed cert tạm để Nginx không lỗi khi listen 443 default
-    ssl_certificate     /etc/nginx/ssl/self-signed.crt;
-    ssl_certificate_key /etc/nginx/ssl/self-signed.key;
 
     return 444;
 }
