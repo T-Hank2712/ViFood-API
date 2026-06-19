@@ -73,6 +73,16 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # Generate self-signed cert cho catch-all block (chặn truy cập thẳng IP)
+    # Cert thực (Let's Encrypt) vẫn dùng cho domain chính
+    command: >
+      sh -c "mkdir -p /etc/nginx/ssl &&
+             openssl req -x509 -nodes -newkey rsa:2048
+               -keyout /etc/nginx/ssl/self-signed.key
+               -out /etc/nginx/ssl/self-signed.crt
+               -days 3650
+               -subj '/CN=localhost' 2>/dev/null &&
+             nginx -g 'daemon off;'"
     env_file:
       - .env    # Nginx cần DOMAIN từ .env để envsubst xử lý template
     volumes:
