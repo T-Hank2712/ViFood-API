@@ -1,3 +1,7 @@
+import httpx
+from fastapi import UploadFile
+
+from app.core.config import settings
 from app.models.product import Product
 
 
@@ -29,3 +33,28 @@ class ProductServiceV1:
             warning="Không sử dụng cho trẻ em dưới 3 tuổi",
             origin="Việt Nam"
         )
+
+    async def extract_from_image(self, image: UploadFile) -> dict:
+        file_content = await image.read()
+
+        files = {
+            "file": (
+                image.filename,
+                file_content,
+                image.content_type or "image/jpeg"
+            )
+        }
+
+        async with httpx.AsyncClient(timeout=90) as client:
+            response = await client.post(
+                settings.ai_api_url,
+                files=files
+            )
+
+        response.raise_for_status()
+        result = response.json()
+
+        if not result.get("success"):
+            raise Exception("AI API extract failed")
+
+        return result["data"]
