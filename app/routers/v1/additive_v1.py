@@ -82,6 +82,23 @@ def create_additive(payload: CreateAdditiveRequest):
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e)
         )
+        
+        
+@router.post("/bulk")
+def create_many_additives(payload: list[CreateAdditiveRequest]):
+    try:
+        result = additive_service.create_many_additives(payload)
+
+        return {
+            "message": "Bulk create additives success",
+            "data": result
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
 
 
 @router.patch("/{id}")

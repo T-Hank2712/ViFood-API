@@ -5,6 +5,8 @@ from app.core.database import neo4j_db
 from app.schemas.profile_schema import HealthProfileRequest
 from fastapi import APIRouter, HTTPException, status
 
+from app.schemas.name_schema import NameRequest
+
 router = APIRouter(
     prefix="/health-goals",
     tags=["Health Goals V1"]
@@ -140,6 +142,23 @@ def create_health_goal(payload: HealthProfileRequest):
 
     except ValueError as e:
 
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+        
+        
+@router.post("/bulk")
+def create_many_health_goals(payload: list[NameRequest]):
+    try:
+        result = health_goal_service.create_many_health_goals(payload)
+
+        return {
+            "message": "Bulk create health goals success",
+            "data": result
+        }
+
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e)

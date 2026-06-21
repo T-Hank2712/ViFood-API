@@ -1,5 +1,6 @@
 from app.models.health_goal import HealthGoal
 from app.repositories.health_goal_repo import HealthGoalRepository
+from app.schemas.name_schema import NameRequest
 
 
 class HealthGoalServiceV1:
@@ -52,3 +53,26 @@ class HealthGoalServiceV1:
         success = self.repo.delete(health_goal_id)
 
         return success
+    
+    def create_many_health_goals(self, requests: list[NameRequest]):
+        created = []
+
+        for req in requests:
+            existing = self.repo._find_by_key(req.name)
+
+            if existing:
+                continue
+
+            health_goal = HealthGoal(
+                name=req.name
+            )
+
+            created_health_goal = self.repo.create(health_goal)
+
+            if created_health_goal:
+                created.append(created_health_goal)
+
+        if not created:
+            raise ValueError("All health goals already exist or nothing was created")
+
+        return created

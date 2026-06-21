@@ -1,5 +1,6 @@
 from app.models.allergy import Allergy
 from app.repositories.allergy_repo import AllergyRepository
+from app.schemas.name_schema import NameRequest
 
 
 class AllergyServiceV1:
@@ -54,3 +55,26 @@ class AllergyServiceV1:
         success = self.repo.delete(allergy_id)
 
         return success
+
+    def create_many_allergies(self, requests: list[NameRequest]):
+        created = []
+
+        for req in requests:
+            existing = self.repo._find_by_key(req.name)
+
+            if existing:
+                continue
+
+            allergen = Allergy(
+                name=req.name
+            )
+
+            created_allergen = self.repo.create(allergen)
+
+            if created_allergen:
+                created.append(created_allergen)
+
+        if not created:
+            raise ValueError("All allergens already exist or nothing was created")
+
+        return created

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File
 
 from app.services.v1.product_service_v1 import ProductServiceV1
 
@@ -19,3 +19,9 @@ def create_product():
         "message": "Create Product success",
         "data": result
     }
+    
+
+@router.post("/products/extract")
+async def extract_product(file: UploadFile = File(...)):
+    service = ProductServiceV1()
+    return await service.extract_from_image(file)
