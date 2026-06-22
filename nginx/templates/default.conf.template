@@ -4,15 +4,13 @@
 # Nginx Docker image tự động xử lý file này khi container start:
 #   /etc/nginx/templates/*.template → envsubst → /etc/nginx/conf.d/*.conf
 #
-# Biến được inject từ .env (qua docker-compose env_file):
-#   ${DOMAIN}  — domain thực của bạn, VD: api.vifood.com
-#
-# LƯU Ý: Nginx variables ($host, $remote_addr...) phải viết $$
-#   để envsubst không thay thế nhầm → sau xử lý $$ trở thành $
+# Chỉ có ${DOMAIN} (dùng ngoặc nhọn) mới được envsubst thay thế.
+# Tất cả Nginx variables ($host, $remote_addr...) dùng $ đơn bình thường
+# vì envsubst của Nginx Docker chỉ thay ${VAR}, không thay $VAR.
 # ==============================================================
 
-# Docker internal DNS — resolve upstream theo tên service lúc có request
-# (không resolve tại startup → tránh lỗi "host not found" khi Nginx start trước api)
+# Docker internal DNS resolver — resolve "api" theo tên service
+# lúc có request thực sự (không resolve tại startup → tránh crash)
 resolver 127.0.0.11 valid=10s ipv6=off;
 
 # ==============================================================
@@ -30,36 +28,33 @@ server {
 
 # ==============================================================
 # HTTP — port 80
-# Giai đoạn 1 (chưa có SSL): proxy thẳng vào API
-# Giai đoạn 2 (có SSL)     : redirect 301 → HTTPS
 # ==============================================================
 server {
     listen 80;
     listen [::]:80;
     server_name ${DOMAIN};
 
-    # Let's Encrypt ACME challenge
+    # Let's Encrypt ACME challenge (dùng khi xin SSL)
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
-    # --- Giai đoạn 1: chưa có SSL ---
-    # Xóa block location này và bỏ comment "return 301" bên dưới khi đã có SSL
+    # Proxy vào API — dùng biến $upstream để Nginx không resolve tại startup
     location / {
         proxy_pass         http://api:8000;
         proxy_http_version 1.1;
-        proxy_set_header   Upgrade           $$http_upgrade;
+        proxy_set_header   Upgrade           $http_upgrade;
         proxy_set_header   Connection        "upgrade";
-        proxy_set_header   Host              $$host;
-        proxy_set_header   X-Real-IP         $$remote_addr;
-        proxy_set_header   X-Forwarded-For   $$proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $$scheme;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_read_timeout 120s;
         proxy_send_timeout 120s;
     }
 
-    # --- Giai đoạn 2: bật khi có SSL ---
-    # return 301 https://${DOMAIN}$$request_uri;
+    # Bật dòng này và tắt location / ở trên khi đã có SSL
+    # return 301 https://${DOMAIN}$request_uri;
 }
 
 # ==============================================================
@@ -92,14 +87,15 @@ server {
 #     gzip_min_length 1024;
 #
 #     location / {
-#         proxy_pass         http://vifood_api;
+#         set $upstream http://api:8000;
+#         proxy_pass         $upstream;
 #         proxy_http_version 1.1;
-#         proxy_set_header   Upgrade           $$http_upgrade;
+#         proxy_set_header   Upgrade           $http_upgrade;
 #         proxy_set_header   Connection        "upgrade";
-#         proxy_set_header   Host              $$host;
-#         proxy_set_header   X-Real-IP         $$remote_addr;
-#         proxy_set_header   X-Forwarded-For   $$proxy_add_x_forwarded_for;
-#         proxy_set_header   X-Forwarded-Proto $$scheme;
+#         proxy_set_header   Host              $host;
+#         proxy_set_header   X-Real-IP         $remote_addr;
+#         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+#         proxy_set_header   X-Forwarded-Proto $scheme;
 #         proxy_read_timeout 120s;
 #         proxy_send_timeout 120s;
 #     }
