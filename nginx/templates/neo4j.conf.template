@@ -13,7 +13,8 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name neo4j.${DOMAIN};
+    # Match ưu tiên host cấu hình tường minh; giữ fallback cũ để tương thích.
+    server_name ${NEO4J_DOMAIN} neo4j.${DOMAIN};
 
     # Let's Encrypt ACME challenge
     location /.well-known/acme-challenge/ {
@@ -47,10 +48,10 @@ server {
 # server {
 #     listen 443 ssl http2;
 #     listen [::]:443 ssl http2;
-#     server_name neo4j.${DOMAIN};
+#     server_name ${NEO4J_DOMAIN} neo4j.${DOMAIN};
 #
-#     ssl_certificate     /etc/letsencrypt/live/neo4j.${DOMAIN}/fullchain.pem;
-#     ssl_certificate_key /etc/letsencrypt/live/neo4j.${DOMAIN}/privkey.pem;
+#     ssl_certificate     /etc/letsencrypt/live/${NEO4J_DOMAIN}/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/${NEO4J_DOMAIN}/privkey.pem;
 #
 #     ssl_protocols             TLSv1.2 TLSv1.3;
 #     ssl_ciphers               ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
