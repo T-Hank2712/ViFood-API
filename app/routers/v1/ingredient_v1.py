@@ -82,6 +82,23 @@ def create_ingredient(payload: CreateIngredientRequest):
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e)
         )
+        
+
+@router.post("/bulk")
+def create_many_ingredients(payload: list[CreateIngredientRequest]):
+    try:
+        result = ingredient_service.create_many_ingredients(payload)
+
+        return {
+            "message": "Bulk create ingredients success",
+            "data": result
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
 
 
 @router.patch("/{id}")

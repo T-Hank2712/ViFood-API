@@ -2,6 +2,7 @@ from app.services.v1.allergy_service_v1 import AllergyServiceV1
 from app.core.database import neo4j_db
 from app.schemas.profile_schema import HealthProfileRequest
 from fastapi import APIRouter, HTTPException, status
+from app.schemas.name_schema import NameRequest
 
 router = APIRouter(
     prefix="/allergies",
@@ -53,6 +54,23 @@ def create_allergy(payload: HealthProfileRequest):
         return {
             "message": "Create Allergy success",
             "data": allergy,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+        
+        
+@router.post("/bulk")
+def create_many_allergies(payload: list[NameRequest]):
+    try:
+        result = allergy_service.create_many_allergies(payload)
+
+        return {
+            "message": "Bulk create allergies success",
+            "data": result
         }
 
     except ValueError as e:

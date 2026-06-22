@@ -118,3 +118,28 @@ class AdditiveServiceV1:
         self.repo.attach_category(additive_id, category_node.id)
 
         return True
+
+    def create_many_additives(self, requests: list[CreateAdditiveRequest]):
+        created = []
+
+        for req in requests:
+            existing = self.repo._find_by_key(req.name)
+
+            if existing:
+                continue
+
+            additive = Additive(
+                name=req.name,
+                code=req.code,
+                description=req.description
+            )
+
+            created_additive = self.repo.create(additive)
+
+            if created_additive:
+                created.append(created_additive)
+
+        if not created:
+            raise ValueError("All additives already exist or nothing was created")
+
+        return created

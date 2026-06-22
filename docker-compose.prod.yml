@@ -9,7 +9,8 @@ services:
     # Production: KHÔNG expose port 7474 (Neo4j browser) ra internet
     # Chỉ expose Bolt để debug nếu cần (có thể comment dòng dưới)
     ports:
-      - "127.0.0.1:7687:7687"    # Bind localhost only, không public
+      - "7474:7474"    # Neo4j browser UI — public (dev access)
+      - "7687:7687"    # Bolt protocol — public (dev access)
     environment:
       NEO4J_AUTH: ${NEO4J_USERNAME}/${NEO4J_PASSWORD}
       NEO4J_PLUGINS: '["apoc"]'

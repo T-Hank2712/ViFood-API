@@ -25,11 +25,11 @@ class Settings(BaseSettings):
     neo4j_uri: str
     neo4j_username: str
     neo4j_password: str
-    neo4j_database: str
+    neo4j_database: str = Field(default="neo4j")
     
     # ==================== Server Settings ====================
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8002
     
     # ==================== CORS Settings ====================
     allowed_origins: list = ["*"]
@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     # ==================== URL Settings ====================
     base_url: str = "http://localhost:8000"
     api_prefix: str = "/api"
+    ai_api_url: str = "http://localhost:8001/extract"
     products_default_version: Literal["v0", "v1"] = "v0"
     products_canary_enabled: bool = False
     products_canary_percent: int = Field(default=0, ge=0, le=100)
@@ -63,6 +64,7 @@ class Settings(BaseSettings):
         "env_file": ".env",
         "case_sensitive": False,
         "env_file_encoding": "utf-8",
+        "extra": "ignore",
     }
 
 

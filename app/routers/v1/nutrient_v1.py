@@ -79,6 +79,23 @@ def create_nutrient(payload: CreateNutrientRequest):
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e)
         )
+        
+
+@router.post("/bulk")
+def create_many_nutrients(payload: list[CreateNutrientRequest]):
+    try:
+        result = nutrient_service.create_many_nutrients(payload)
+
+        return {
+            "message": "Bulk create nutrients success",
+            "data": result
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
 
 
 @router.patch("/{id}")

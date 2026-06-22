@@ -129,3 +129,27 @@ class IngredientServiceV1:
         )
 
         return True
+    
+    def create_many_ingredients(self, requests: list[CreateIngredientRequest]):
+        created = []
+
+        for req in requests:
+            existing = self.repo._find_by_key(req.name)
+
+            if existing:
+                continue
+
+            ingredient = Ingredient(
+                name=req.name,
+                description=req.description
+            )
+
+            created_ingredient = self.repo.create(ingredient)
+
+            if created_ingredient:
+                created.append(created_ingredient)
+
+        if not created:
+            raise ValueError("All ingredients already exist or nothing was created")
+
+        return created
