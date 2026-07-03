@@ -26,6 +26,7 @@ class Neo4jConnection:
     def get_session(self):
         return self.driver.session()
 
+
 neo4j_db = Neo4jConnection(
     uri=settings.neo4j_uri,
     username=settings.neo4j_username,
