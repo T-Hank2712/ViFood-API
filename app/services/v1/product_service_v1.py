@@ -60,7 +60,7 @@ class ProductServiceV1:
 
         if not result.get("success"):
             raise Exception("AI API extract failed")
-
+        
         return {
             "s3_key": s3_key,
             "data": result["data"],

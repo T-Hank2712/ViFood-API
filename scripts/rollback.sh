@@ -13,7 +13,7 @@ set -euo pipefail
 # ---- Config ----
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/vifood}"
 COMPOSE_FILE="$DEPLOY_DIR/docker-compose.prod.yml"
-HEALTH_URL="http://localhost:${PORT:-8000}/health"
+HEALTH_CONTAINER="vifood-api"
 MAX_RETRIES=10
 RETRY_INTERVAL=4
 
@@ -61,7 +61,10 @@ docker compose -f "$COMPOSE_FILE" up -d --no-build api
 echo "[4/4] Health check ($MAX_RETRIES retries x ${RETRY_INTERVAL}s)..."
 for i in $(seq 1 "$MAX_RETRIES"); do
     sleep "$RETRY_INTERVAL"
-    HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+    HTTP_STATUS=$(docker exec "$HEALTH_CONTAINER" \
+        curl -s -o /dev/null -w "%{http_code}" \
+        http://localhost:8000/health 2>/dev/null)
+    HTTP_STATUS="${HTTP_STATUS:-000}"
 
     if [ "$HTTP_STATUS" = "200" ]; then
         echo ""

@@ -1,30 +1,11 @@
 # ==============================================================
-# default.conf.template — Nginx config với biến môi trường
+# neo4j.conf.template — Nginx reverse proxy cho Neo4j Browser
 #
-# Nginx Docker image tự động xử lý file này khi container start:
-#   /etc/nginx/templates/*.template → envsubst → /etc/nginx/conf.d/*.conf
+# Subdomain: neo4j.${DOMAIN}  →  http://neo4j:7474 (Docker internal)
 #
-# Chỉ có ${DOMAIN} (dùng ngoặc nhọn) mới được envsubst thay thế.
-# Tất cả Nginx variables ($host, $remote_addr...) dùng $ đơn bình thường
-# vì envsubst của Nginx Docker chỉ thay ${VAR}, không thay $VAR.
+# LƯU Ý: Với nginx Docker envsubst, chỉ ${VAR} là env var cần thay thế.
+# Nginx variables ($host, $remote_addr...) phải dùng $ đơn bình thường.
 # ==============================================================
-
-# Docker internal DNS resolver — resolve "api" theo tên service
-# lúc có request thực sự (không resolve tại startup → tránh crash)
-resolver 127.0.0.11 valid=10s ipv6=off;
-
-# ==============================================================
-# Catch-all — chặn truy cập trực tiếp bằng IP (không khớp domain)
-# Trả về 444: Nginx đóng kết nối ngay, không gửi response
-# (443 catch-all thêm vào sau khi có SSL)
-# ==============================================================
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    server_name _;
-
-    return 444;
-}
 
 # ==============================================================
 # HTTP — port 80
@@ -32,16 +13,17 @@ server {
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DOMAIN};
+    # Match ưu tiên host cấu hình tường minh; giữ fallback cũ để tương thích.
+    server_name ${NEO4J_DOMAIN} neo4j.${DOMAIN};
 
-    # Let's Encrypt ACME challenge (dùng khi xin SSL)
+    # Let's Encrypt ACME challenge
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
-    # Proxy vào API — dùng biến $upstream để Nginx không resolve tại startup
     location / {
-        proxy_pass         http://api:8000;
+        set $upstream http://neo4j:7474;
+        proxy_pass         $upstream;
         proxy_http_version 1.1;
         proxy_set_header   Upgrade           $http_upgrade;
         proxy_set_header   Connection        "upgrade";
@@ -53,24 +35,23 @@ server {
         proxy_send_timeout 120s;
     }
 
-    # Bật dòng này và tắt location / ở trên khi đã có SSL
-    # return 301 https://${DOMAIN}$request_uri;
+    # --- Giai đoạn 2: bật khi có SSL ---
+    # return 301 https://neo4j.${DOMAIN}$request_uri;
 }
 
 # ==============================================================
 # HTTPS — port 443
-# Bỏ comment toàn bộ block này sau khi xin SSL thành công:
-#   docker compose -f docker-compose.prod.yml run --rm certbot \
-#     certonly --webroot -w /var/www/certbot \
-#     -d ${DOMAIN} --email your@email.com --agree-tos --no-eff-email
+# Bỏ comment sau khi xin SSL:
+#   certbot certonly --webroot -w /var/www/certbot \
+#     -d neo4j.${DOMAIN} --email your@email.com --agree-tos
 # ==============================================================
 # server {
 #     listen 443 ssl http2;
 #     listen [::]:443 ssl http2;
-#     server_name ${DOMAIN};
+#     server_name ${NEO4J_DOMAIN} neo4j.${DOMAIN};
 #
-#     ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
-#     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+#     ssl_certificate     /etc/letsencrypt/live/${NEO4J_DOMAIN}/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/${NEO4J_DOMAIN}/privkey.pem;
 #
 #     ssl_protocols             TLSv1.2 TLSv1.3;
 #     ssl_ciphers               ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
@@ -79,15 +60,11 @@ server {
 #     ssl_session_timeout       1d;
 #
 #     add_header Strict-Transport-Security "max-age=63072000" always;
-#     add_header X-Frame-Options           DENY;
+#     add_header X-Frame-Options           SAMEORIGIN;
 #     add_header X-Content-Type-Options    nosniff;
 #
-#     gzip            on;
-#     gzip_types      application/json text/plain text/css application/javascript;
-#     gzip_min_length 1024;
-#
 #     location / {
-#         set $upstream http://api:8000;
+#         set $upstream http://neo4j:7474;
 #         proxy_pass         $upstream;
 #         proxy_http_version 1.1;
 #         proxy_set_header   Upgrade           $http_upgrade;
