@@ -33,10 +33,3 @@ neo4j_db = Neo4jConnection(
     password=settings.neo4j_password,
     database=settings.neo4j_database,
 )
-
-kc_db = Neo4jConnection(
-    uri=settings.kc_neo4j_uri,
-    username=settings.kc_neo4j_username,
-    password=settings.kc_neo4j_password,
-    database=settings.kc_neo4j_database,
-)

@@ -27,11 +27,6 @@ class Settings(BaseSettings):
     neo4j_password: str
     neo4j_database: str = Field(default="neo4j")
     
-    kc_neo4j_uri: str
-    kc_neo4j_username: str
-    kc_neo4j_password: str
-    kc_neo4j_database: str = Field(default="neo4j")
-    
     # ==================== AWS S3 Settings ====================
     aws_access_key_id: str
     aws_secret_access_key: str
