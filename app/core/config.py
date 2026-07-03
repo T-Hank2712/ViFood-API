@@ -27,6 +27,17 @@ class Settings(BaseSettings):
     neo4j_password: str
     neo4j_database: str = Field(default="neo4j")
     
+    kc_neo4j_uri: str
+    kc_neo4j_username: str
+    kc_neo4j_password: str
+    kc_neo4j_database: str = Field(default="neo4j")
+    
+    # ==================== AWS S3 Settings ====================
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_region: str
+    aws_s3_bucket: str
+    
     # ==================== Server Settings ====================
     host: str = "0.0.0.0"
     port: int = 8002
@@ -44,7 +55,7 @@ class Settings(BaseSettings):
     # ==================== URL Settings ====================
     base_url: str = "http://localhost:8000"
     api_prefix: str = "/api"
-    ai_api_url: str = "http://localhost:8001/extract"
+    ai_api_url: str = "http://13.212.6.150/extract"
     products_default_version: Literal["v0", "v1"] = "v0"
     products_canary_enabled: bool = False
     products_canary_percent: int = Field(default=0, ge=0, le=100)
