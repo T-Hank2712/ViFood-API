@@ -55,7 +55,8 @@ class Settings(BaseSettings):
     # ==================== URL Settings ====================
     base_url: str = "http://localhost:8000"
     api_prefix: str = "/api"
-    ai_api_url: str = "http://13.212.6.150/extract"
+    ai_api_url: str
+    ai_extract: str = "/extract"
     products_default_version: Literal["v0", "v1"] = "v0"
     products_canary_enabled: bool = False
     products_canary_percent: int = Field(default=0, ge=0, le=100)

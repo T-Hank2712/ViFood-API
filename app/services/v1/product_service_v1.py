@@ -9,6 +9,7 @@ from app.services.s3_service import S3Service
 class ProductServiceV1:
     def __init__(self):
         self.s3_service = S3Service(settings)
+        self.settings = settings
 
     def create(self) -> Product:
         return Product(
@@ -38,6 +39,7 @@ class ProductServiceV1:
         )
 
     async def extract_from_image(self, user_id: str, image: UploadFile) -> dict:
+        ai_api_url = f"{self.settings.ai_api_url.rstrip('/')}{self.settings.ai_extract}"
         file_content = await image.read()
         content_type = image.content_type or "image/jpeg"
 
@@ -49,7 +51,7 @@ class ProductServiceV1:
 
         async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(
-                settings.ai_api_url,
+                ai_api_url,
                 json={
                     "s3_key": s3_key,
                 },
