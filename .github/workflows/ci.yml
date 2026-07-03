@@ -169,6 +169,11 @@ jobs:
             -e ALGORITHM=HS256 \
             -e ACCESS_TOKEN_EXPIRE_MINUTES=15 \
             -e REFRESH_TOKEN_EXPIRE_DAYS=30 \
+            -e AWS_ACCESS_KEY_ID=ci-dummy \
+            -e AWS_SECRET_ACCESS_KEY=ci-dummy \
+            -e AWS_REGION=ap-southeast-1 \
+            -e AWS_S3_BUCKET=ci-dummy-bucket \
+            -e AI_API_URL=http://127.0.0.1:9999 \
             vifood-api:ci-${{ github.sha }}
 
           # Chờ container khởi động (tối đa 30s)
@@ -182,6 +187,13 @@ jobs:
             fi
             echo "Attempt $i: status=$STATUS"
           done
+
+          STATUS=$(docker inspect --format='{{.State.Status}}' vifood-ci-smoke 2>/dev/null || echo "missing")
+          if [ "$STATUS" != "running" ]; then
+            echo "Container failed to start. status=$STATUS"
+            docker logs vifood-ci-smoke || true
+            exit 1
+          fi
 
           # Kiểm tra /health trả về HTTP 200
           # --retry để thử lại nếu app chưa sẵn sàng

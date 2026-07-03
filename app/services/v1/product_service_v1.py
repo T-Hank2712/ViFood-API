@@ -3,9 +3,13 @@ from fastapi import UploadFile
 
 from app.core.config import settings
 from app.models.product import Product
+from app.services.s3_service import S3Service
 
 
 class ProductServiceV1:
+    def __init__(self):
+        self.s3_service = S3Service(settings)
+        self.settings = settings
 
     def create(self) -> Product:
         return Product(
@@ -34,21 +38,23 @@ class ProductServiceV1:
             origin="Việt Nam"
         )
 
-    async def extract_from_image(self, image: UploadFile) -> dict:
+    async def extract_from_image(self, user_id: str, image: UploadFile) -> dict:
+        ai_api_url = f"{self.settings.ai_api_url.rstrip('/')}{self.settings.ai_extract}"
         file_content = await image.read()
+        content_type = image.content_type or "image/jpeg"
 
-        files = {
-            "file": (
-                image.filename,
-                file_content,
-                image.content_type or "image/jpeg"
-            )
-        }
+        s3_key = self.s3_service.upload_file(
+            user_id=user_id,
+            file_content=file_content,
+            content_type=content_type,
+        )
 
         async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(
-                settings.ai_api_url,
-                files=files
+                ai_api_url,
+                json={
+                    "s3_key": s3_key,
+                },
             )
 
         response.raise_for_status()
@@ -56,5 +62,8 @@ class ProductServiceV1:
 
         if not result.get("success"):
             raise Exception("AI API extract failed")
-
-        return result["data"]
+        
+        return {
+            "s3_key": s3_key,
+            "data": result["data"],
+        }

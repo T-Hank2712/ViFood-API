@@ -1,7 +1,10 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter
 
 from app.services.v1.product_service_v1 import ProductServiceV1
 
+from fastapi import Depends, File, UploadFile
+
+from app.core.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/products",
@@ -22,6 +25,12 @@ def create_product():
     
 
 @router.post("/products/extract")
-async def extract_product(file: UploadFile = File(...)):
-    service = ProductServiceV1()
-    return await service.extract_from_image(file)
+async def extract_product(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+):
+
+    return await product_service.extract_from_image(
+        user_id=current_user["user_id"],
+        image=file,
+    )

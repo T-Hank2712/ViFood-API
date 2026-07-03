@@ -1,17 +1,16 @@
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
-import os
+from app.core.config import settings
 
 load_dotenv()
 
 
 class Neo4jConnection:
-    def __init__(self):
-
-        self.uri = os.getenv("NEO4J_URI")
-        self.username = os.getenv("NEO4J_USERNAME")
-        self.password = os.getenv("NEO4J_PASSWORD")
-        self.database = os.getenv("NEO4J_DATABASE")
+    def __init__(self, uri: str, username: str, password: str, database: str = "neo4j"):
+        self.uri = uri
+        self.username = username
+        self.password = password
+        self.database = database
 
         self.driver = GraphDatabase.driver(
             self.uri,
@@ -28,4 +27,9 @@ class Neo4jConnection:
         return self.driver.session()
 
 
-neo4j_db = Neo4jConnection()
+neo4j_db = Neo4jConnection(
+    uri=settings.neo4j_uri,
+    username=settings.neo4j_username,
+    password=settings.neo4j_password,
+    database=settings.neo4j_database,
+)
