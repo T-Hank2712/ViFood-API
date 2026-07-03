@@ -1,6 +1,5 @@
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
-import os
 from app.core.config import settings
 
 load_dotenv()

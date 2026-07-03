@@ -1,12 +1,10 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter
 
 from app.services.v1.product_service_v1 import ProductServiceV1
 
 from fastapi import Depends, File, UploadFile
 
 from app.core.dependencies import get_current_user
-from app.models.user import User
-
 
 router = APIRouter(
     prefix="/products",
