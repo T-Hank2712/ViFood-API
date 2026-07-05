@@ -22,7 +22,7 @@ class SearchServiceV1:
             sections=node.sections,
         )
 
-    def get_all(self) -> list[SearchNodeResponse]:
+    def _get_all_nodes(self) -> list[SearchNodeResponse]:
         results: list[SearchNodeResponse] = []
 
         results.extend([
@@ -38,8 +38,11 @@ class SearchServiceV1:
             for additive in self.additive_service.get_all_additives()
         ])
 
-        random.shuffle(results)
+        return results
 
+    def get_all(self) -> list[SearchNodeResponse]:
+        results = self._get_all_nodes()
+        random.shuffle(results)
         return results
 
     def get_by_id(self, id: str) -> SearchNodeResponse | None:
@@ -75,7 +78,7 @@ class SearchServiceV1:
         return None
 
     def get_daily_feature(self) -> SearchNodeResponse | None:
-        items = self.get_all()
+        items = sorted(self._get_all_nodes(), key=lambda item: item.id)
 
         if not items:
             return None
