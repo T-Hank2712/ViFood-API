@@ -1,19 +1,11 @@
-from app.models.DTOs.searchDTO import searchDTO, searchDtoDetail
-from app.models.additive import Additive
-from app.models.ingredient import Ingredient
-from app.models.nutrient import Nutrient
+from datetime import date
+import random
 
+from app.schemas.search_schema import SearchNodeResponse
+from app.schemas.wiki_node_schema import WikiNodeResponse
 from app.services.v1.additive_service_v1 import AdditiveServiceV1
 from app.services.v1.ingredient_service_v1 import IngredientServiceV1
 from app.services.v1.nutrient_service_v1 import NutrientServiceV1
-
-from app.schemas.nutrient_schema import NutrientDetail
-from app.schemas.ingredient_schema import IngredientDetail
-from app.schemas.additive_schema import AdditiveDetail
-
-from datetime import date
-
-import random
 
 
 class SearchServiceV1:
@@ -21,121 +13,75 @@ class SearchServiceV1:
         self.nutrient_service = NutrientServiceV1(db)
         self.ingredient_service = IngredientServiceV1(db)
         self.additive_service = AdditiveServiceV1(db)
-        
-    def map_nutrient(self, n: Nutrient) -> searchDTO:
-        return searchDTO(
-            id=f"nutrient-{n.id}",
-            name=n.name,
-            key=n.key,
-            description=n.description,
-            type="nutrient"
+
+    def _map_node(self, node: WikiNodeResponse, node_type: str) -> SearchNodeResponse:
+        return SearchNodeResponse(
+            id=node.id,
+            name=node.name,
+            type=node_type,
+            sections=node.sections,
         )
 
-    def map_nutrient_detail(self, n: NutrientDetail) -> searchDtoDetail:
-        return searchDtoDetail(
-            id=n.id,
-            name=n.name,
-            key=n.key,
-            description=n.description,
-            effects=n.effects,
-            categories=n.categories,
-        )
-        
-    def map_ingredient(self, i: Ingredient) -> searchDTO:
-        return searchDTO(
-            id=f"ingredient-{i.id}",
-            name=i.name,
-            key=i.key,
-            description=i.description,
-            type="ingredient"
-        )
-        
-    def map_ingredient_detail(self, i: IngredientDetail) -> searchDtoDetail:
-        return searchDtoDetail(
-            id=i.id,
-            name=i.name,
-            key=i.key,
-            description=i.description,
-            effects=i.effects,
-            categories=i.categories
-        )
+    def get_all(self) -> list[SearchNodeResponse]:
+        results: list[SearchNodeResponse] = []
 
-    def map_additive(self, a: Additive) -> searchDTO:
-        return searchDTO(
-            id=f"additive-{a.id}",
-            name=a.name,
-            key=a.key,
-            code=a.code,
-            description=a.description,
-            type="additive"
-        )
-        
-    def map_additive_detail(self, a: AdditiveDetail) -> searchDtoDetail:
-        return searchDtoDetail(
-            id=a.id,
-            name=a.name,
-            key=a.key,
-            code=a.code,
-            description=a.description,
-            effects=a.effects,
-            categories=a.categories,
-        )
-        
-    def get_all(self) -> list[searchDTO]:
-        results: list[searchDTO] = []
-
-        # Nutrients
-        nutrients = self.nutrient_service.get_all_nutrients()
-        results.extend([self.map_nutrient(n) for n in nutrients])
-
-        # Ingredients
-        ingredients = self.ingredient_service.get_all_ingredients()
-        results.extend([self.map_ingredient(i) for i in ingredients])
-
-        # Additives
-        additives = self.additive_service.get_all_additives()
-        results.extend([self.map_additive(a) for a in additives])
+        results.extend([
+            self._map_node(nutrient, "nutrient")
+            for nutrient in self.nutrient_service.get_all_nutrients()
+        ])
+        results.extend([
+            self._map_node(ingredient, "ingredient")
+            for ingredient in self.ingredient_service.get_all_ingredients()
+        ])
+        results.extend([
+            self._map_node(additive, "additive")
+            for additive in self.additive_service.get_all_additives()
+        ])
 
         random.shuffle(results)
 
         return results
-    
-    def get_by_id(self, id: str) -> searchDTO | None:
+
+    def get_by_id(self, id: str) -> SearchNodeResponse | None:
+        node_type = self._get_node_type(id)
+
         try:
-            prefix, id_str = id.split("-", 1)
+            if node_type == "nutrient":
+                nutrient = self.nutrient_service.get_nutrient_by_id(id)
+                return self._map_node(nutrient, node_type)
+
+            if node_type == "ingredient":
+                ingredient = self.ingredient_service.get_ingredient_by_id(id)
+                return self._map_node(ingredient, node_type)
+
+            if node_type == "additive":
+                additive = self.additive_service.get_additive_by_id(id)
+                return self._map_node(additive, node_type)
         except ValueError:
             return None
 
-        if prefix == "nutrient":
-            n = self.nutrient_service.get_nutrient_detail(id_str)
-            return self.map_nutrient_detail(n) if n else None
+        return None
 
-        elif prefix == "ingredient":
-            i = self.ingredient_service.get_ingredient_detail(id_str)
-            return self.map_ingredient_detail(i) if i else None
+    def _get_node_type(self, id: str) -> str | None:
+        if id.startswith("NUTRIENT:"):
+            return "nutrient"
 
-        elif prefix == "additive":
-            a = self.additive_service.get_additive_detail(id_str)
-            return self.map_additive_detail(a) if a else None
+        if id.startswith("INGREDIENT:"):
+            return "ingredient"
+
+        if id.startswith("ADDITIVE:"):
+            return "additive"
 
         return None
-    
-    # Chức năng này chưa được tối ưu
-    def get_daily_feature(self) -> searchDTO | None:
-        items = (
-            [self.map_nutrient(n) for n in self.nutrient_service.get_all_nutrients()]
-            + [self.map_ingredient(i) for i in self.ingredient_service.get_all_ingredients()]
-            + [self.map_additive(a) for a in self.additive_service.get_all_additives()]
-        )
+
+    def get_daily_feature(self) -> SearchNodeResponse | None:
+        items = self.get_all()
 
         if not items:
             return None
 
-        # Tạo thứ tự cố định nhưng ngẫu nhiên
         rng = random.Random(2025)
         rng.shuffle(items)
 
-        # Mỗi ngày lấy 1 item tiếp theo
         index = date.today().toordinal() % len(items)
-
         return items[index]
