@@ -22,24 +22,36 @@ class SearchServiceV1:
             sections=node.sections,
         )
 
-    def get_all(self) -> list[SearchNodeResponse]:
+    def _get_nodes_by_type(self, getter, node_type: str) -> list[SearchNodeResponse]:
+        try:
+            return [
+                self._map_node(node, node_type)
+                for node in getter()
+            ]
+        except ValueError:
+            return []
+
+    def _get_all_nodes(self) -> list[SearchNodeResponse]:
         results: list[SearchNodeResponse] = []
 
-        results.extend([
-            self._map_node(nutrient, "nutrient")
-            for nutrient in self.nutrient_service.get_all_nutrients()
-        ])
-        results.extend([
-            self._map_node(ingredient, "ingredient")
-            for ingredient in self.ingredient_service.get_all_ingredients()
-        ])
-        results.extend([
-            self._map_node(additive, "additive")
-            for additive in self.additive_service.get_all_additives()
-        ])
+        results.extend(self._get_nodes_by_type(
+            self.nutrient_service.get_all_nutrients,
+            "nutrient",
+        ))
+        results.extend(self._get_nodes_by_type(
+            self.ingredient_service.get_all_ingredients,
+            "ingredient",
+        ))
+        results.extend(self._get_nodes_by_type(
+            self.additive_service.get_all_additives,
+            "additive",
+        ))
 
+        return results
+
+    def get_all(self) -> list[SearchNodeResponse]:
+        results = self._get_all_nodes()
         random.shuffle(results)
-
         return results
 
     def get_by_id(self, id: str) -> SearchNodeResponse | None:
@@ -75,7 +87,7 @@ class SearchServiceV1:
         return None
 
     def get_daily_feature(self) -> SearchNodeResponse | None:
-        items = self.get_all()
+        items = sorted(self._get_all_nodes(), key=lambda item: item.id)
 
         if not items:
             return None
