@@ -1,4 +1,5 @@
 from app.repositories.additive_repo import AdditiveRepository
+from app.templates.additive_section_template import build_additive_sections
 
 
 class AdditiveServiceV1:
@@ -20,4 +21,5 @@ class AdditiveServiceV1:
         if not additive:
             raise ValueError("Additive Not Found")
 
+        additive.sections = build_additive_sections(additive)
         return additive

@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.core.database import neo4j_db
-from app.schemas.wiki_node_schema import WikiNodeApiResponse, WikiNodeListApiResponse
+from app.schemas.additive_v1_schema import (
+    AdditiveDetailApiResponse,
+    AdditiveListApiResponse,
+)
 from app.services.v1.additive_service_v1 import AdditiveServiceV1
 
 router = APIRouter(
@@ -12,7 +15,7 @@ router = APIRouter(
 additive_service = AdditiveServiceV1(neo4j_db)
 
 
-@router.get("/", response_model=WikiNodeListApiResponse)
+@router.get("/", response_model=AdditiveListApiResponse)
 def list_additives():
     try:
         additives = additive_service.get_all_additives()
@@ -29,7 +32,7 @@ def list_additives():
         )
 
 
-@router.get("/{id}", response_model=WikiNodeApiResponse)
+@router.get("/{id}", response_model=AdditiveDetailApiResponse)
 def get_additive_by_id(id: str):
     try:
         additive = additive_service.get_additive_by_id(id)

@@ -1,8 +1,6 @@
 from datetime import date
 import random
 
-from app.schemas.search_schema import SearchNodeResponse
-from app.schemas.wiki_node_schema import WikiNodeResponse
 from app.services.v1.additive_service_v1 import AdditiveServiceV1
 from app.services.v1.ingredient_service_v1 import IngredientServiceV1
 from app.services.v1.nutrient_service_v1 import NutrientServiceV1
@@ -14,61 +12,44 @@ class SearchServiceV1:
         self.ingredient_service = IngredientServiceV1(db)
         self.additive_service = AdditiveServiceV1(db)
 
-    def _map_node(self, node: WikiNodeResponse, node_type: str) -> SearchNodeResponse:
-        return SearchNodeResponse(
-            id=node.id,
-            name=getattr(node, "name_vi", None) or node.name,
-            type=node_type,
-            sections=getattr(node, "sections", []),
-        )
-
-    def _get_nodes_by_type(self, getter, node_type: str) -> list[SearchNodeResponse]:
+    def _get_nodes_by_type(self, getter) -> list:
         try:
-            return [
-                self._map_node(node, node_type)
-                for node in getter()
-            ]
+            return getter()
         except ValueError:
             return []
 
-    def _get_all_nodes(self) -> list[SearchNodeResponse]:
-        results: list[SearchNodeResponse] = []
+    def _get_all_nodes(self) -> list:
+        results: list = []
 
         results.extend(self._get_nodes_by_type(
             self.nutrient_service.get_all_nutrients,
-            "nutrient",
         ))
         results.extend(self._get_nodes_by_type(
             self.ingredient_service.get_all_ingredients,
-            "ingredient",
         ))
         results.extend(self._get_nodes_by_type(
             self.additive_service.get_all_additives,
-            "additive",
         ))
 
         return results
 
-    def get_all(self) -> list[SearchNodeResponse]:
+    def get_all(self) -> list:
         results = self._get_all_nodes()
         random.shuffle(results)
         return results
 
-    def get_by_id(self, id: str) -> SearchNodeResponse | None:
+    def get_by_id(self, id: str):
         node_type = self._get_node_type(id)
 
         try:
             if node_type == "nutrient":
-                nutrient = self.nutrient_service.get_nutrient_by_id(id)
-                return self._map_node(nutrient, node_type)
+                return self.nutrient_service.get_nutrient_by_id(id)
 
             if node_type == "ingredient":
-                ingredient = self.ingredient_service.get_ingredient_by_id(id)
-                return self._map_node(ingredient, node_type)
+                return self.ingredient_service.get_ingredient_by_id(id)
 
             if node_type == "additive":
-                additive = self.additive_service.get_additive_by_id(id)
-                return self._map_node(additive, node_type)
+                return self.additive_service.get_additive_by_id(id)
         except ValueError:
             return None
 
@@ -86,7 +67,7 @@ class SearchServiceV1:
 
         return None
 
-    def get_daily_feature(self) -> SearchNodeResponse | None:
+    def get_daily_feature(self):
         items = sorted(self._get_all_nodes(), key=lambda item: item.id)
 
         if not items:
