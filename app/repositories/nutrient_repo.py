@@ -12,6 +12,9 @@ class NutrientRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db)
 
+    def _to_string(self, value) -> str | None:
+        return str(value) if value is not None else None
+
     def _map_nutrient_node(self, node) -> NutrientNodeResponse:
         return NutrientNodeResponse(
             id=node.get("id"),
@@ -22,9 +25,9 @@ class NutrientRepository(BaseRepository):
             vietnam_label_requirement=node.get("vietnam_label_requirement"),
             source_version=node.get("source_version"),
             status=node.get("status"),
-            reviewed_at=node.get("reviewed_at"),
-            created_at=node.get("created_at"),
-            updated_at=node.get("updated_at"),
+            reviewed_at=self._to_string(node.get("reviewed_at")),
+            created_at=self._to_string(node.get("created_at")),
+            updated_at=self._to_string(node.get("updated_at")),
         )
 
     def _map_source(self, source) -> NutrientSourceResponse | None:
@@ -37,7 +40,7 @@ class NutrientRepository(BaseRepository):
             source_type=source.get("source_type"),
             url=source.get("url"),
             status=source.get("status"),
-            reviewed_at=source.get("reviewed_at"),
+            reviewed_at=self._to_string(source.get("reviewed_at")),
         )
 
     def _map_health_claim(self, claim) -> NutrientHealthClaimResponse | None:
@@ -51,7 +54,7 @@ class NutrientRepository(BaseRepository):
             evidence_level=claim.get("evidence_level"),
             conditions_of_use=claim.get("conditions_of_use"),
             status=claim.get("status"),
-            reviewed_at=claim.get("reviewed_at"),
+            reviewed_at=self._to_string(claim.get("reviewed_at")),
         )
 
     def _map_nutrient_detail(self, record) -> NutrientDetailResponse:

@@ -41,8 +41,8 @@ class NutrientSectionResponse(BaseModel):
 
 
 class NutrientDetailResponse(NutrientNodeResponse):
-    sources: list[NutrientSourceResponse] = Field(default_factory=list)
-    health_claims: list[NutrientHealthClaimResponse] = Field(default_factory=list)
+    sources: list[NutrientSourceResponse] = Field(default_factory=list, exclude=True)
+    health_claims: list[NutrientHealthClaimResponse] = Field(default_factory=list, exclude=True)
     sections: list[NutrientSectionResponse] = Field(default_factory=list)
 
 
