@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.core.database import neo4j_db
-from app.schemas.wiki_node_schema import WikiNodeApiResponse, WikiNodeListApiResponse
+from app.schemas.nutrient_v1_schema import (
+    NutrientDetailApiResponse,
+    NutrientListApiResponse,
+)
 from app.services.v1.nutrient_service_v1 import NutrientServiceV1
 
 router = APIRouter(
@@ -12,7 +15,7 @@ router = APIRouter(
 nutrient_service = NutrientServiceV1(neo4j_db)
 
 
-@router.get("/", response_model=WikiNodeListApiResponse)
+@router.get("/", response_model=NutrientListApiResponse)
 def list_nutrients():
     try:
         nutrients = nutrient_service.get_all_nutrients()
@@ -29,7 +32,7 @@ def list_nutrients():
         )
 
 
-@router.get("/{id}", response_model=WikiNodeApiResponse)
+@router.get("/{id}", response_model=NutrientDetailApiResponse)
 def get_nutrient_by_id(id: str):
     try:
         nutrient = nutrient_service.get_nutrient_by_id(id)

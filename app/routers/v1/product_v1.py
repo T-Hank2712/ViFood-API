@@ -24,7 +24,7 @@ def create_product():
     }
     
 
-@router.post("/products/extract")
+@router.post("/extract")
 async def extract_product(
     file: UploadFile = File(...),
     current_user=Depends(get_current_user),
