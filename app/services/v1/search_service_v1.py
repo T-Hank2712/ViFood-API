@@ -17,9 +17,9 @@ class SearchServiceV1:
     def _map_node(self, node: WikiNodeResponse, node_type: str) -> SearchNodeResponse:
         return SearchNodeResponse(
             id=node.id,
-            name=node.name,
+            name=getattr(node, "name_vi", None) or node.name,
             type=node_type,
-            sections=node.sections,
+            sections=getattr(node, "sections", []),
         )
 
     def _get_nodes_by_type(self, getter, node_type: str) -> list[SearchNodeResponse]:

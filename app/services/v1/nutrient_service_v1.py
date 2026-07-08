@@ -1,4 +1,5 @@
 from app.repositories.nutrient_repo import NutrientRepository
+from app.templates.nutrient_section_template import build_nutrient_sections
 
 
 class NutrientServiceV1:
@@ -20,4 +21,5 @@ class NutrientServiceV1:
         if not nutrient:
             raise ValueError("Nutrient Not Found")
 
+        nutrient.sections = build_nutrient_sections(nutrient)
         return nutrient
